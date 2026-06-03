@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matriz Cinema — iOS Backlog</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      --card-shadow-hover: 0 6px 20px rgba(0,0,0,0.12);
+      --card-done-bg: #f0f0f0;
+      --header-bg: #1c1c2e;
+      --header-text: #ffffff;
+      --accent: #6f42c1;
+
+      --facil-bg: #d4edda;
+      --facil-text: #1a5c34;
+      --facil-border: #a8d5b5;
+      --facil-section: #edf7f0;
+
+      --medio-bg: #fff3cd;
+      --medio-text: #7a5800;
+      --medio-border: #ffd97d;
+      --medio-section: #fffbee;
+
+      --dificil-bg: #e8d5f5;
+      --dificil-text: #5a2d9e;
+      --dificil-border: #c9a8eb;
+      --dificil-section: #f5eeff;
+
+      --id-color: #888;
+      --text-main: #1a1a2e;
+      --text-sub: #4a4a6a;
+      --border-light: #e8e8f0;
+      --done-text: #aaa;
+      --filter-active-bg: #1c1c2e;
+      --filter-active-text: #fff;
+      --filter-bg: #ffffff;
+      --filter-text: #333;
+
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 0.25s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 16px 24px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .header-left h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .header-left .subtitle {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .progress-label {
+      font-size: 13px;
+      opacity: 0.85;
+      white-space: nowrap;
+    }
+
+    .progress-bar-wrap {
+      width: 220px;
+      height: 7px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a78bfa, #7c3aed);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: var(--card-bg);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 72px;
+      z-index: 90;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .toolbar-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--id-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+    }
+
+    .filter-btn {
+      border: 1.5px solid var(--border-light);
+      background: var(--filter-bg);
+      color: var(--filter-text);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .filter-btn:hover { border-color: #aaa; }
+    .filter-btn.active {
+      background: var(--filter-active-bg);
+      color: var(--filter-active-text);
+      border-color: var(--filter-active-bg);
+    }
+    .filter-btn.facil.active   { background: var(--facil-text); border-color: var(--facil-text); }
+    .filter-btn.medio.active   { background: var(--medio-text); border-color: var(--medio-text); }
+    .filter-btn.dificil.active { background: var(--dificil-text); border-color: var(--dificil-text); }
+
+    .hide-done-btn {
+      margin-left: auto;
+      border: 1.5px solid var(--border-light);
+      background: var(--filter-bg);
+      color: var(--filter-text);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .hide-done-btn.active { background: #1c1c2e; color: #fff; border-color: #1c1c2e; }
+
+    /* ── MAIN LAYOUT ── */
+    main { padding: 28px 24px 60px; max-width: 1400px; margin: 0 auto; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      margin-top: 36px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .section-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .section-badge.dificil { background: var(--dificil-bg); color: var(--dificil-text); }
+    .section-badge.medio   { background: var(--medio-bg);   color: var(--medio-text); }
+    .section-badge.facil   { background: var(--facil-bg);   color: var(--facil-text); }
+
+    .section-count {
+      font-size: 12px;
+      color: var(--id-color);
+      font-weight: 500;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      border: 1.5px solid transparent;
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+
+    .card.done {
+      background: var(--card-done-bg);
+      opacity: 0.6;
+      transform: none !important;
+      box-shadow: none;
+    }
+    .card.done .card-title { text-decoration: line-through; color: var(--done-text); }
+
+    .card.hidden { display: none; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    .badge.dificil { background: var(--dificil-bg); color: var(--dificil-text); }
+    .badge.medio   { background: var(--medio-bg);   color: var(--medio-text); }
+    .badge.facil   { background: var(--facil-bg);   color: var(--facil-text); }
+
+    .done-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .done-checkbox input { display: none; }
+    .done-checkbox .check-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border-light);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .done-checkbox input:checked + .check-icon {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+    .done-checkbox .check-icon::after {
+      content: '';
+      display: none;
+      width: 6px;
+      height: 10px;
+      border: 2px solid white;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translateY(-1px);
+    }
+    .done-checkbox input:checked + .check-icon::after { display: block; }
+    .done-label { font-size: 12px; color: var(--id-color); font-weight: 500; }
+
+    .card-body { padding: 0 16px 14px; flex: 1; }
+
+    .card-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--id-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      transition: color var(--transition);
+    }
+
+    /* ── DETAILS / COLLAPSIBLE ── */
+    details {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 8px;
+      border: 1.5px solid var(--border-light);
+    }
+
+    details[open] { border-color: #c8c8e0; }
+
+    summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+      background: #fafafa;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      user-select: none;
+      transition: background var(--transition);
+    }
+    summary:hover { background: #f0f0f8; }
+    summary::-webkit-details-marker { display: none; }
+
+    summary .chevron {
+      transition: transform var(--transition);
+      font-size: 10px;
+      color: #aaa;
+    }
+    details[open] summary .chevron { transform: rotate(180deg); }
+
+    .details-body {
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-sub);
+      border-top: 1.5px solid var(--border-light);
+    }
+
+    .details-body.dificil { background: var(--dificil-section); }
+    .details-body.medio   { background: var(--medio-section); }
+    .details-body.facil   { background: var(--facil-section); }
+
+    .details-body ul {
+      padding-left: 18px;
+    }
+    .details-body ul li { margin-bottom: 5px; }
+    .details-body ul li:last-child { margin-bottom: 0; }
+
+    .details-body p { margin-bottom: 8px; }
+    .details-body p:last-child { margin-bottom: 0; }
+
+    code {
+      background: rgba(111,66,193,0.1);
+      color: #5a2d9e;
+      font-family: "SF Mono", "Fira Code", "Courier New", monospace;
+      font-size: 11.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .tech-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      background: #f0ecff;
+      color: #6f42c1;
+      border: 1px solid #c9a8eb;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin: 2px 2px 0 0;
+    }
+
+    .impl-header { font-weight: 700; color: var(--text-main); margin-bottom: 6px; font-size: 12.5px; }
+
+    .note-box {
+      background: #fffbea;
+      border: 1px solid #f5d76e;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #7a5800;
+      margin-top: 8px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 12px 16px; }
+      .toolbar { padding: 10px 16px; top: 68px; }
+      main { padding: 20px 12px 60px; }
+      .card-grid { grid-template-columns: 1fr; }
+      .progress-bar-wrap { width: 140px; }
+    }
+
+    /* ── SECTION DIVIDER ── */
+    .section-divider {
+      border: none;
+      border-top: 2px solid var(--border-light);
+      margin: 36px 0 0;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--id-color);
+      font-size: 15px;
+      display: none;
+    }
+    .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<header>
+  <div class="header-left">
+    <h1>Guitarllito — iOS Backlog</h1>
+    <div class="subtitle">Xcode 13.2.1 · iOS 15 Target · SwiftUI</div>
+  </div>
+  <div class="header-right">
+    <div class="progress-label" id="progressLabel">0 / 45 tasks concluídas</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════ TOOLBAR ═══════════════════════════════════ -->
+<div class="toolbar">
+  <span class="toolbar-label">Filtrar:</span>
+  <button class="filter-btn active" data-filter="all">Todos</button>
+  <button class="filter-btn facil"   data-filter="facil">Fácil</button>
+  <button class="filter-btn medio"   data-filter="medio">Médio</button>
+  <button class="filter-btn dificil" data-filter="dificil">Difícil</button>
+  <button class="hide-done-btn" id="hideDoneBtn">Ocultar Concluídas</button>
+</div>
+
+<!-- ═══════════════════════════════════ MAIN ═══════════════════════════════════ -->
+<main>
+
+<!-- ─────────────────────── DIFÍCIL ─────────────────────── -->
+<div class="section-title" data-section="dificil">
+  <h2>Difícil</h2>
+  <span class="section-badge dificil">Difícil</span>
+  <span class="section-count" id="count-dificil"></span>
+</div>
+<div class="card-grid" id="grid-dificil">
+
+  <!-- MC-001 -->
+  <div class="card" data-id="MC-001" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-001</div>
+      <div class="card-title">Selecionar metas predefinidas para agilizar a criação</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar banco de templates de metas no CoreData com categorias (escalas, acordes, ritmos, repertório).</li>
+            <li>Construir tela de seleção com <code>List</code> agrupado por categoria.</li>
+            <li>Ao selecionar um template, pré-preencher o formulário de criação de meta.</li>
+            <li>Permitir ao usuário personalizar os campos antes de salvar.</li>
+            <li>Implementar barra de busca para filtrar templates.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">SwiftUI</span><span class="tech-tag">NavigationView</span>
+          <p style="margin-top:10px">Criar entidade <code>GoalTemplate</code> no CoreData com campos <code>title</code>, <code>category</code>, <code>difficulty</code>, <code>defaultDuration</code>. Seed os templates no <code>PersistenceController</code> via <code>viewContext</code> na primeira execução (verificar com <code>UserDefaults</code>). Na UI, usar <code>@FetchRequest(sortDescriptors:)</code> com seção por categoria. Ao tocar em um item, navegar via <code>NavigationLink</code> para o <code>GoalFormView</code> com os campos pré-preenchidos via <code>@Binding</code>.</p>
+          <div class="note-box">iOS 15: use <code>NavigationView</code> + <code>navigationTitle</code>. Não use <code>NavigationStack</code> (iOS 16+).</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-002a -->
+  <div class="card" data-id="MC-002a" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-002a</div>
+      <div class="card-title">Gemini API — Configurar cliente HTTP e modelos Codable</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar <code>GeminiService.swift</code> como singleton com método <code>generate(prompt:)</code> assíncrono.</li>
+            <li>Modelar structs <code>Codable</code>: <code>GeminiRequest</code>, <code>GeminiContent</code>, <code>GeminiPart</code>, <code>GeminiResponse</code>.</li>
+            <li>Armazenar API Key no <code>Info.plist</code> e ler via <code>Bundle.main.infoDictionary</code>.</li>
+            <li>Tratar erros de rede e respostas inválidas com enum de <code>GeminiError</code>.</li>
+            <li>Escrever testes unitários mockando a resposta da API.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">URLSession</span><span class="tech-tag">Codable</span><span class="tech-tag">async/await</span>
+          <p style="margin-top:10px">Usar <code>URLSession.shared.data(for: URLRequest)</code> com <code>async/await</code> (disponível no iOS 15). Endpoint: <code>https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=API_KEY</code>. Body em JSON com <code>JSONEncoder</code>. Decodificar com <code>JSONDecoder</code>. Propagar erros com <code>throws</code>.</p>
+          <div class="note-box">Nunca hardcode a API Key no código-fonte. Use <code>Info.plist</code> com uma variável de ambiente no scheme do Xcode para desenvolvimento.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-002b -->
+  <div class="card" data-id="MC-002b" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-002b</div>
+      <div class="card-title">Gemini API — Prompt builder e UI de sugestões de metas</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Construir prompt contextualizado com nível do usuário, instrumento e objetivos cadastrados.</li>
+            <li>Exibir loading state com <code>ProgressView</code> enquanto aguarda resposta.</li>
+            <li>Apresentar sugestões geradas em <code>.sheet()</code> com lista selecionável.</li>
+            <li>Ao selecionar sugestão, pré-preencher o formulário de criação de meta.</li>
+            <li>Tratar e exibir erros de forma amigável (sem conexão, erro da API, etc.).</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">SwiftUI sheet</span><span class="tech-tag">@ObservableObject</span><span class="tech-tag">Task</span>
+          <p style="margin-top:10px">Criar <code>GeminiViewModel: ObservableObject</code> com <code>@Published var suggestions: [String]</code> e <code>@Published var isLoading: Bool</code>. Chamar <code>GeminiService.shared.generate(prompt:)</code> dentro de <code>Task { }</code>. Prompt template: <em>"Sugira 5 metas de prática de guitarra para um aluno [nível] que quer [objetivo]. Retorne como lista numerada."</em> Parsear a resposta dividindo por <code>\n</code>. Exibir via <code>.sheet(isPresented:)</code> com <code>List</code> e botão de confirmação.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-003 -->
+  <div class="card" data-id="MC-003" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-003</div>
+      <div class="card-title">Exibir retrospectiva comparativa entre início e conclusão de objetivo</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Ao marcar um objetivo como concluído, abrir tela de retrospectiva automática.</li>
+            <li>Comparar snapshot inicial (dados de onboarding ou criação) com dados atuais.</li>
+            <li>Exibir métricas: tempo total praticado, XP ganho, acordes/técnicas aprendidos durante o objetivo.</li>
+            <li>Mostrar gravações de áudio/vídeo do início e fim do objetivo (se existirem).</li>
+            <li>Botão de compartilhar a retrospectiva como imagem.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">SwiftUI</span><span class="tech-tag">UIActivityViewController</span>
+          <p style="margin-top:10px">Salvar <code>GoalSnapshot</code> no CoreData no momento da criação do objetivo (XP inicial, accordes dominados, etc.). Ao concluir, buscar o snapshot via <code>@FetchRequest</code> usando o <code>objectID</code> do objetivo. Renderizar comparativo com <code>VStack</code> de barras customizadas via <code>GeometryReader + RoundedRectangle</code> (sem Charts do iOS 16). Para compartilhar: usar <code>ImageRenderer</code> (iOS 16) não está disponível — usar <code>UIGraphicsImageRenderer</code> para capturar a <code>UIView</code> via <code>UIViewRepresentable</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-004a -->
+  <div class="card" data-id="MC-004a" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-004a</div>
+      <div class="card-title">Widget da Home — Configurar extensão WidgetKit e App Group</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Adicionar target "Widget Extension" no Xcode (File → New Target → Widget Extension).</li>
+            <li>Ativar capability "App Groups" em ambos os targets (app principal e widget).</li>
+            <li>Criar container <code>UserDefaults(suiteName: "group.com.seuapp.matrizzcinema")</code> para compartilhar dados.</li>
+            <li>Criar <code>SharedDataManager.swift</code> para serializar e ler o resumo de metas do dia.</li>
+            <li>Configurar <code>Info.plist</code> do widget com descrição e nome corretos.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">WidgetKit</span><span class="tech-tag">App Groups</span><span class="tech-tag">UserDefaults</span>
+          <p style="margin-top:10px">O widget NÃO tem acesso direto ao CoreData do app principal. Use <code>UserDefaults</code> com App Group suite para passar um struct simples codificado em JSON. No app principal: ao salvar/alterar metas, chamar <code>SharedDataManager.write(dailySummary)</code>. No widget target: <code>SharedDataManager.read()</code>. Alternativamente, usar CoreData com <code>NSPersistentContainer(name:)</code> apontando para o mesmo <code>App Group Container URL</code> em ambos os targets.</p>
+          <div class="note-box">WidgetKit disponível desde iOS 14. Compatível com iOS 15 e Xcode 13.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-004b -->
+  <div class="card" data-id="MC-004b" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-004b</div>
+      <div class="card-title">Widget da Home — Timeline Provider e UI do widget</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Implementar <code>TimelineProvider</code> com <code>getSnapshot</code> e <code>getTimeline</code>.</li>
+            <li>Definir <code>TimelineEntry</code> com data, metas do dia e streak atual.</li>
+            <li>Construir a view do widget: metas do dia em lista, contador de sequência.</li>
+            <li>Suportar tamanhos <code>systemSmall</code> e <code>systemMedium</code>.</li>
+            <li>Configurar política de atualização: <code>.atEnd</code> ou a cada 30 minutos.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">WidgetKit</span><span class="tech-tag">TimelineProvider</span><span class="tech-tag">StaticConfiguration</span>
+          <p style="margin-top:10px">Usar <code>StaticConfiguration(kind:provider:content:)</code> (sem intenções). O <code>TimelineProvider</code> deve retornar entradas para o dia atual. Cada <code>TimelineEntry</code> contém <code>dailyGoals: [GoalSummary]</code> onde <code>GoalSummary</code> é um struct <code>Codable</code> simples. Widget view usa <code>@Environment(\.widgetFamily)</code> para adaptar layout. Política: <code>.after(Date().addingTimeInterval(1800))</code> para refresh a cada 30 minutos.</p>
+          <div class="note-box">Widgets NÃO suportam animações SwiftUI. Para animação do mascote, use entradas de timeline com imagens estáticas diferentes.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-005 -->
+  <div class="card" data-id="MC-005" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-005</div>
+      <div class="card-title">Desbloquear funcionalidades progressivamente conforme XP acumulado</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Definir enum de features com threshold mínimo de XP para desbloqueio.</li>
+            <li>Criar <code>ViewModifier</code> que sobrepõe ícone de cadeado se feature bloqueada.</li>
+            <li>Exibir modal explicando o que é necessário para desbloquear ao tocar em item bloqueado.</li>
+            <li>Animação de "desbloqueio" ao atingir o XP necessário pela primeira vez.</li>
+            <li>Persistir estado de desbloqueio para não reanimar features já vistas.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">SwiftUI ViewModifier</span><span class="tech-tag">@AppStorage</span><span class="tech-tag">withAnimation</span>
+          <p style="margin-top:10px">Definir <code>enum FeatureGate: String, CaseIterable</code> com <code>var xpRequired: Int</code>. Criar <code>struct LockedOverlay: ViewModifier</code> que verifica <code>@AppStorage("userXP")</code> e aplica <code>.overlay</code> com <code>ZStack</code> contendo ícone SF Symbol "lock.fill" se bloqueado. No <code>XPService</code>, após atualizar XP, chamar <code>NotificationCenter.default.post(name: .xpUpdated, ...).</code> Views observam com <code>.onReceive</code> e chamam <code>withAnimation(.spring()) { }</code> para revelar o conteúdo.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-006 -->
+  <div class="card" data-id="MC-006" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-006</div>
+      <div class="card-title">Comparar habilidades técnicas atuais com registros anteriores</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar entidade <code>SkillSnapshot</code> no CoreData com data, acordes dominados, técnicas e repertório.</li>
+            <li>Salvar snapshot automaticamente em marcos: conclusão de objetivo, badge conquistada.</li>
+            <li>Tela de comparação: exibir gráfico de barras lado a lado (snapshot mais antigo vs atual).</li>
+            <li>Permitir selecionar qualquer dois snapshots para comparar.</li>
+            <li>Destacar diferenças positivas em verde e regressões em laranja.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">GeometryReader</span><span class="tech-tag">Path</span>
+          <p style="margin-top:10px">Entidade CoreData: <code>SkillSnapshot</code> com <code>date: Date</code>, <code>chordsCount: Int16</code>, <code>techniquesCount: Int16</code>, <code>repertoireCount: Int16</code>. Gráfico de barras customizado: <code>GeometryReader { geo in HStack { ForEach(...) { bar in RoundedRectangle(cornerRadius: 4).frame(width: ..., height: geo.size.height * ratio) } } }</code>. Não usar o framework <code>Charts</code> (iOS 16+). Usar <code>Color(hex:)</code> extension para cores dinamicas de progresso.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-007 -->
+  <div class="card" data-id="MC-007" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-007</div>
+      <div class="card-title">Notificar o usuário ao superar uma barreira técnica registrada</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar entidade <code>TechnicalBarrier</code> no CoreData: descrição, data do primeiro fracasso, status.</li>
+            <li>Ao concluir uma meta, verificar se ela corresponde a uma barreira cadastrada ainda não superada.</li>
+            <li>Se superada: disparar notificação local celebratória e atualizar status da barreira.</li>
+            <li>Exibir histórico de barreiras superadas na área de conquistas.</li>
+            <li>Opção de marcar manualmente uma meta/prática como "barreira técnica".</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">UNUserNotificationCenter</span><span class="tech-tag">CoreData</span>
+          <p style="margin-top:10px">Na conclusão de meta, chamar <code>BarrierService.check(completedGoal:)</code>. O service faz <code>NSFetchRequest&lt;TechnicalBarrier&gt;</code> com predicate de keyword match. Se encontrado e <code>isOvercome == false</code>: criar <code>UNMutableNotificationContent</code> com título "Barreira Superada! 🎸", disparar com <code>UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)</code>. Atualizar <code>barrier.isOvercome = true</code> e salvar contexto. Solicitar permissão de notificação no onboarding com <code>UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-008 -->
+  <div class="card" data-id="MC-008" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-008</div>
+      <div class="card-title">Visualizar retrospectiva completa de progresso musical</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Tela de retrospectiva com abas deslizáveis: Tempo, Metas, Streak, Gravações, XP.</li>
+            <li>Calcular agregados: total de horas praticadas, metas concluídas por semana, maior streak.</li>
+            <li>Gráficos de linha de evolução de XP ao longo do tempo.</li>
+            <li>Galeria de gravações mais relevantes.</li>
+            <li>Filtro de período: semana, mês, trimestre, total.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">TabView</span><span class="tech-tag">PageTabViewStyle</span><span class="tech-tag">CoreData NSExpression</span>
+          <p style="margin-top:10px">Usar <code>TabView { ... }.tabViewStyle(.page(indexDisplayMode: .always))</code> para abas deslizáveis. Para agregar tempo de sessões: <code>NSFetchRequest</code> com <code>NSExpression(forFunction: "sum:", arguments:)</code> no campo <code>duration</code>. Gráfico de linha: <code>Path</code> que conecta pontos <code>CGPoint</code> calculados de um array de pares <code>(Date, XP)</code> dentro de <code>GeometryReader</code>. Filtro de período: <code>@State var selectedPeriod: Period</code> que atualiza o predicado do fetch.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-009a -->
+  <div class="card" data-id="MC-009a" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-009a</div>
+      <div class="card-title">Comparação de áudio — Armazenamento e vinculação de gravações</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar entidade <code>AudioRecording</code> no CoreData: <code>filePath</code>, <code>date</code>, <code>duration</code>, relação com <code>Goal</code>.</li>
+            <li>Salvar gravações no diretório <code>Documents</code> com convenção de nome: <code>{goalID}_{timestamp}.m4a</code>.</li>
+            <li>Implementar tela de listagem de gravações agrupadas por objetivo.</li>
+            <li>Permitir selecionar duas gravações da mesma meta para comparação.</li>
+            <li>Validar que o arquivo existe antes de tentar reproduzir.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">AVAudioRecorder</span><span class="tech-tag">AVAudioSession</span><span class="tech-tag">FileManager</span>
+          <p style="margin-top:10px">Configurar sessão: <code>try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)</code>. URL do arquivo: <code>FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("goal_\(id)_\(ISO8601DateFormatter().string(from: Date())).m4a")</code>. Configurações do recorder: <code>[.formatIDKey: kAudioFormatMPEG4AAC, .sampleRateKey: 44100, .numberOfChannelsKey: 1, .encoderAudioQualityKey: AVAudioQuality.high.rawValue]</code>. Adicionar <code>NSMicrophoneUsageDescription</code> no <code>Info.plist</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-009b -->
+  <div class="card" data-id="MC-009b" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-009b</div>
+      <div class="card-title">Comparação de áudio — UI de reprodução e comparação lado a lado</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Tela com duas colunas: gravação antiga (data) e gravação nova (data).</li>
+            <li>Controles de play/pause independentes para cada gravação.</li>
+            <li>Visualização de nível de áudio com barras animadas simples durante reprodução.</li>
+            <li>Botão "Reproduzir Ambas" para iniciar simultaneamente.</li>
+            <li>Exibir duração e data de cada gravação.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">AVAudioPlayer</span><span class="tech-tag">Combine</span><span class="tech-tag">Timer.publish</span>
+          <p style="margin-top:10px">Criar <code>AudioPlayerViewModel: ObservableObject</code> com dois <code>AVAudioPlayer</code> (playerA e playerB). Controles bindados a <code>@Published var isPlayingA: Bool</code> e <code>isPlayingB: Bool</code>. Para as barras de visualização: usar <code>player.averagePower(forChannel: 0)</code> e atualizar via <code>Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()</code>. Converter <code>averagePower</code> (dB, -160 a 0) para escala 0–1 com fórmula: <code>pow(10, power / 20)</code>. Animar barras com <code>withAnimation(.linear(duration: 0.1))</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-010 -->
+  <div class="card" data-id="MC-010" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-010</div>
+      <div class="card-title">Comparar gravações de vídeo da mesma meta em datas diferentes</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Criar entidade <code>VideoRecording</code> no CoreData: <code>filePath</code>, <code>date</code>, <code>thumbnailPath</code>, relação com <code>Goal</code>.</li>
+            <li>Tela de comparação com dois players de vídeo empilhados verticalmente (ou em split view).</li>
+            <li>Gerar thumbnail automaticamente após gravar usando <code>AVAssetImageGenerator</code>.</li>
+            <li>Controles de play/pause sincronizados opcionalmente.</li>
+            <li>Exibir data e duração de cada vídeo.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">AVKit</span><span class="tech-tag">AVPlayer</span><span class="tech-tag">AVAssetImageGenerator</span>
+          <p style="margin-top:10px">Usar <code>VideoPlayer(player: AVPlayer(url: fileURL))</code> do framework <code>AVKit</code> (disponível iOS 14+). Dois <code>VideoPlayer</code> em <code>VStack</code>. Thumbnail: <code>let asset = AVAsset(url: url); let gen = AVAssetImageGenerator(asset: asset); gen.appliesPreferredTrackTransform = true; let cgImage = try gen.copyCGImage(at: .zero, actualTime: nil)</code>. Salvar thumbnail como JPEG no Documents e caminho no CoreData. Adicionar <code>NSCameraUsageDescription</code> e <code>NSPhotoLibraryUsageDescription</code> no <code>Info.plist</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-011 -->
+  <div class="card" data-id="MC-011" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-011</div>
+      <div class="card-title">Gerar retrospectiva automática com as gravações mais representativas</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Heurística de seleção: primeira gravação de cada objetivo, gravação do mês de maior XP ganho.</li>
+            <li>Construir playlist ordenada cronologicamente com títulos contextuais.</li>
+            <li>Reprodução sequencial automática com transição entre gravações.</li>
+            <li>Opção de regenerar a seleção ou editar manualmente a playlist.</li>
+            <li>Compartilhar a playlist como lista de arquivos de áudio.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">AVQueuePlayer</span><span class="tech-tag">CoreData NSSortDescriptor</span>
+          <p style="margin-top:10px">Algoritmo de seleção em <code>RetrospectiveService.swift</code>: buscar <code>AudioRecording</code> ordenadas por <code>date ASC</code> com <code>NSSortDescriptor</code>. Agrupar por objetivo, pegar primeira e última. Adicionar a mais próxima de marcos de XP. Usar <code>AVQueuePlayer</code> para reprodução sequencial: <code>let items = urls.map { AVPlayerItem(url: $0) }; let player = AVQueuePlayer(items: items)</code>. Observar fim de cada item com <code>NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, ...)</code> para atualizar UI.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-012 -->
+  <div class="card" data-id="MC-012" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-012</div>
+      <div class="card-title">Reorganizar metas automaticamente quando há padrão de não cumprimento</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Rastrear <code>consecutiveFailures</code> por meta no CoreData.</li>
+            <li>Threshold: após 3 falhas consecutivas, acionar sugestão de versão simplificada via Gemini API.</li>
+            <li>Exibir <code>alert</code> ou sheet com a meta simplificada sugerida.</li>
+            <li>Se aceito: criar nova meta "filha" com relação <code>parentGoal</code> e arquivar a original.</li>
+            <li>Notificar o usuário sobre a sugestão de simplificação de forma não intrusiva.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">GeminiService (MC-002a)</span><span class="tech-tag">.alert()</span>
+          <p style="margin-top:10px">No <code>Goal</code> CoreData entity: campo <code>consecutiveFailures: Int16</code>. Ao encerrar sessão sem completar a meta: incrementar contador. Se <code>consecutiveFailures >= 3</code>: chamar <code>GeminiService.shared.generate(prompt: "Simplifique esta meta de guitarra: '\(goal.title)' para um aluno \(userLevel)")</code>. Exibir resultado com <code>.alert("Meta muito difícil?", isPresented: $showSimplification) { ... }</code>. Relação CoreData: adicionar <code>parentGoal: Goal?</code> (to-one optional) na entidade.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-013 -->
+  <div class="card" data-id="MC-013" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-013</div>
+      <div class="card-title">Avaliar complexidade de nova meta e sugerir versão mais acessível</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Ao submeter formulário de nova meta, enviar título para análise da Gemini API.</li>
+            <li>Prompt: avaliar se a meta é adequada ao nível do usuário e retornar: adequada / complexa + sugestão.</li>
+            <li>Se complexa: exibir sheet com avaliação e meta alternativa mais simples.</li>
+            <li>Usuário pode aceitar a sugestão ou salvar a meta original mesmo assim.</li>
+            <li>Adicionar indicador visual de complexidade estimada no card da meta.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">GeminiService (MC-002a)</span><span class="tech-tag">.sheet()</span><span class="tech-tag">@State</span>
+          <p style="margin-top:10px">Ao confirmar o formulário, chamar <code>Task { let result = try await GeminiService.shared.evaluate(goal: title, level: userLevel) }</code>. Prompt: <em>"Dado que o músico é \(level), esta meta é adequada: '\(title)'? Responda: ADEQUADA ou COMPLEXA. Se COMPLEXA, sugira uma versão mais simples em uma linha."</em>. Parsear resposta para enum <code>ComplexityResult { case adequate, complex(suggestion: String) }</code>. Exibir sheet condicionalmente com <code>.sheet(item: $complexityResult)</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-014 -->
+  <div class="card" data-id="MC-014" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-014</div>
+      <div class="card-title">Enviar notificação de retrospectiva baseada em gravações antigas</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Ao abrir o app, verificar gravações com mais de 30, 90 ou 180 dias sem notificação enviada.</li>
+            <li>Agendar notificação local para próxima manhã se encontrar gravação elegível.</li>
+            <li>Notificação com deep link para abrir a gravação específica no app.</li>
+            <li>Registrar quais gravações já geraram notificação para evitar repetições.</li>
+            <li>Limite: máximo 1 notificação deste tipo por semana.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">UNCalendarNotificationTrigger</span><span class="tech-tag">FileManager</span><span class="tech-tag">CoreData</span>
+          <p style="margin-top:10px">Adicionar campo <code>lastReminderSent: Date?</code> na entidade <code>AudioRecording</code>. Ao abrir o app (<code>onAppear</code> da root view), chamar <code>RetrospectiveNotificationService.schedule()</code>. Service: fetch recordings onde <code>date &lt; (now - 30 days) AND lastReminderSent == nil OR lastReminderSent &lt; (now - 7 days)</code>. Agendar com <code>UNCalendarNotificationTrigger</code> para 9h do dia seguinte. Deep link: <code>userInfo: ["recordingID": recording.objectID.uriRepresentation().absoluteString]</code>. Tratar em <code>UNUserNotificationCenterDelegate</code> no <code>AppDelegate</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-015a -->
+  <div class="card" data-id="MC-015a" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-015a</div>
+      <div class="card-title">Mascote no widget — Sistema de assets por estado emocional</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Definir enum <code>MascotMood</code>: <code>practicing</code>, <code>celebrating</code>, <code>resting</code>, <code>struggling</code>.</li>
+            <li>Criar 4 assets de imagem no <code>Assets.xcassets</code> para cada estado (PNG ou SVG via SF Symbols).</li>
+            <li>Lógica de determinação do mood: streak atual, última prática, taxa de conclusão recente.</li>
+            <li>Compartilhar mood atual via <code>UserDefaults(suiteName: AppGroup)</code> para o widget.</li>
+            <li>Atualizar mood ao concluir meta, iniciar sessão ou encerrar sem praticar.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">UserDefaults (App Group)</span><span class="tech-tag">Codable</span>
+          <p style="margin-top:10px">Definir: <code>enum MascotMood: String, Codable { case practicing, celebrating, resting, struggling }</code>. Lógica em <code>MascotService.computeMood() -> MascotMood</code>: se <code>streak > 7</code> → <code>.celebrating</code>; se <code>lastPractice > 2 days ago</code> → <code>.resting</code>; se <code>completionRate < 0.3</code> → <code>.struggling</code>; senão → <code>.practicing</code>. Salvar: <code>UserDefaults(suiteName: "group.com.app")?.set(try? JSONEncoder().encode(mood), forKey: "mascotMood")</code>. Chamar <code>WidgetCenter.shared.reloadAllTimelines()</code> após atualizar mood.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-015b -->
+  <div class="card" data-id="MC-015b" data-difficulty="dificil">
+    <div class="card-header">
+      <span class="badge dificil">Difícil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-015b</div>
+      <div class="card-title">Mascote no widget — Integração WidgetKit com estados de timeline</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <ul>
+            <li>Ler o <code>MascotMood</code> do App Group no <code>TimelineProvider</code>.</li>
+            <li>Gerar múltiplas entradas de timeline com mood variando ao longo do dia (ex: manhã/tarde/noite).</li>
+            <li>Widget view: exibir imagem do mascote correspondente ao mood + legenda de encorajamento.</li>
+            <li>Suportar tamanho <code>systemSmall</code> com mascote centralizado.</li>
+            <li>Testar os 4 estados de mood na preview do Xcode.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body dificil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">WidgetKit</span><span class="tech-tag">TimelineEntry</span><span class="tech-tag">@Environment widgetFamily</span>
+          <p style="margin-top:10px">Struct de entrada: <code>struct MoodEntry: TimelineEntry { let date: Date; let mood: MascotMood; let streak: Int }</code>. No <code>getTimeline</code>: ler mood do App Group, criar entradas para cada 2h do dia com o mesmo mood. View: <code>Image(entry.mood.assetName).resizable().scaledToFit()</code> onde <code>assetName</code> retorna o nome do asset no <code>xcassets</code>. Legenda motivacional: switch no mood. Preview: <code>MoodEntry_Previews</code> com todos os 4 casos usando <code>PreviewContext</code>.</p>
+          <div class="note-box">WidgetKit não suporta animações — os "estados de animação" são frames estáticos trocados por entradas de timeline diferentes.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+</div><!-- /grid-dificil -->
+
+<!-- ─────────────────────── MÉDIO ─────────────────────── -->
+<hr class="section-divider" />
+<div class="section-title" data-section="medio">
+  <h2>Médio</h2>
+  <span class="section-badge medio">Médio</span>
+  <span class="section-count" id="count-medio"></span>
+</div>
+<div class="card-grid" id="grid-medio">
+
+  <!-- MC-016 -->
+  <div class="card" data-id="MC-016" data-difficulty="medio">
+    <div class="card-header">
+      <span class="badge medio">Médio</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-016</div>
+      <div class="card-title">Distribuir automaticamente as metas diárias ao longo dos dias da semana</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <ul>
+            <li>Algoritmo de distribuição: ordenar metas por prioridade e distribuir uniformemente nos dias com disponibilidade.</li>
+            <li>Respeitar o horário de prática configurado pelo usuário por dia.</li>
+            <li>Exibir prévia da distribuição antes de confirmar.</li>
+            <li>Atualizar <code>scheduledDate</code> das metas no CoreData.</li>
+            <li>Opção de redistribuir manualmente via drag-and-drop.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">Calendar</span><span class="tech-tag">CoreData Batch Update</span><span class="tech-tag">List onMove</span>
+          <p style="margin-top:10px">Serviço <code>SchedulingService.distribute(goals: [Goal], availableDays: [Weekday]) -> [Date: [Goal]]</code>. Usar <code>Calendar.current.nextDate(after: Date(), matching: components, matchingPolicy: .nextTime)</code> para calcular próximo ocorrência de cada dia da semana. Salvar resultados: <code>NSBatchUpdateRequest</code> ou loop com <code>goal.scheduledDate = date</code> e <code>try context.save()</code>. Drag-and-drop na <code>List</code>: <code>.onMove { from, to in ... }</code> com binding ao array reordenado.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-017 -->
+  <div class="card" data-id="MC-017" data-difficulty="medio">
+    <div class="card-header">
+      <span class="badge medio">Médio</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-017</div>
+      <div class="card-title">Gravar vídeo durante uma sessão de prática e vinculá-lo a uma meta</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <ul>
+            <li>Botão de gravação de vídeo dentro da tela de sessão ativa.</li>
+            <li>Abrir câmera nativa e salvar vídeo localmente após gravação.</li>
+            <li>Gerar thumbnail do vídeo automaticamente.</li>
+            <li>Vincular arquivo salvo à meta atual criando entidade <code>VideoRecording</code>.</li>
+            <li>Exibir vídeos gravados na tela de detalhes da meta.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">UIImagePickerController</span><span class="tech-tag">UIViewControllerRepresentable</span><span class="tech-tag">AVAssetImageGenerator</span>
+          <p style="margin-top:10px">Usar <code>UIImagePickerController</code> via <code>UIViewControllerRepresentable</code>: <code>picker.sourceType = .camera; picker.mediaTypes = ["public.movie"]; picker.videoQuality = .typeHigh</code>. No delegate <code>imagePickerController(_:didFinishPickingMediaWithInfo:)</code>: obter URL com <code>info[.mediaURL] as? URL</code>. Copiar para Documents com <code>FileManager.default.copyItem(at: sourceURL, to: destURL)</code>. Adicionar no <code>Info.plist</code>: <code>NSCameraUsageDescription</code> e <code>NSMicrophoneUsageDescription</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-018 -->
+  <div class="card" data-id="MC-018" data-difficulty="medio">
+    <div class="card-header">
+      <span class="badge medio">Médio</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-018</div>
+      <div class="card-title">Exibir comparativo de tempo praticado em relação ao período anterior</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <ul>
+            <li>Ao encerrar sessão, calcular tempo total do dia/semana atual.</li>
+            <li>Comparar com média do mesmo período anterior (ontem, semana passada).</li>
+            <li>Exibir delta percentual: "Você praticou 20% mais que ontem".</li>
+            <li>Mostrar gráfico de barras dos últimos 7 dias.</li>
+            <li>Exibir recorde pessoal de tempo praticado em um único dia.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData NSFetchRequest</span><span class="tech-tag">Calendar</span><span class="tech-tag">Path (gráfico)</span>
+          <p style="margin-top:10px">Fetch sessions do período: <code>NSPredicate(format: "date >= %@ AND date <= %@", startOfDay as CVarArg, endOfDay as CVarArg)</code>. Somar <code>duration</code> no Swift: <code>sessions.reduce(0) { $0 + $1.duration }</code>. Calcular delta: <code>let delta = (current - previous) / previous * 100</code>. Gráfico de barras 7 dias: array de tuplas <code>[(dayLabel: String, totalMinutes: Double)]</code> renderizado com <code>GeometryReader</code> + <code>RoundedRectangle</code> proporcional à altura máxima. Usar <code>Calendar.current.startOfDay(for:)</code> para delimitar dias.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-019 -->
+  <div class="card" data-id="MC-019" data-difficulty="medio">
+    <div class="card-header">
+      <span class="badge medio">Médio</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-019</div>
+      <div class="card-title">Filtrar sessões de prática por duração, dificuldade e humor</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <ul>
+            <li>Painel de filtros com: range de duração (Slider), seletor de dificuldade, seletor de humor.</li>
+            <li>Aplicar filtros via predicate no <code>NSFetchRequest</code> de sessões.</li>
+            <li>Chips de filtro ativos exibidos acima da lista com opção de remover.</li>
+            <li>Contador de sessões encontradas com os filtros aplicados.</li>
+            <li>Botão de limpar todos os filtros.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">NSCompoundPredicate</span><span class="tech-tag">Picker</span><span class="tech-tag">Slider</span>
+          <p style="margin-top:10px">Struct <code>SessionFilter</code> com <code>minDuration: Double</code>, <code>maxDuration: Double</code>, <code>difficulty: GoalDifficulty?</code>, <code>mood: Mood?</code>. Construir predicate: <code>NSCompoundPredicate(andPredicateWithSubpredicates: [durationPredicate, difficultyPredicate, moodPredicate].compactMap { $0 })</code>. Usar <code>@FetchRequest</code> com predicate dinâmico ou recriar o fetch manualmente num <code>ObservableObject</code>. Filtros no toolbar: <code>Menu("Filtrar") { Picker("Humor", ...) { ... } }</code> (iOS 15 suporta <code>Menu</code> com <code>Picker</code>).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-020 -->
+  <div class="card" data-id="MC-020" data-difficulty="medio">
+    <div class="card-header">
+      <span class="badge medio">Médio</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-020</div>
+      <div class="card-title">Vincular sessão de prática a uma música e visualizar histórico</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <ul>
+            <li>Criar entidade CoreData <code>Song</code>: <code>title</code>, <code>artist</code>, <code>genre</code>.</li>
+            <li>Campo opcional "Música" no formulário de sessão com <code>Picker</code> + opção de criar nova.</li>
+            <li>Tela de detalhes da música: histórico de todas as sessões vinculadas.</li>
+            <li>Estatísticas por música: tempo total praticado, número de sessões, melhor humor registrado.</li>
+            <li>Lista de músicas ordenada por tempo de prática total (mais praticadas no topo).</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body medio">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData Relationship</span><span class="tech-tag">@FetchRequest</span><span class="tech-tag">List Section</span>
+          <p style="margin-top:10px">Relação CoreData: <code>PracticeSession.song</code> → <code>Song</code> (to-one, optional). <code>Song.sessions</code> → <code>NSSet</code> de <code>PracticeSession</code> (to-many, cascade delete: no). Agregar tempo por música no Swift: <code>song.sessions?.allObjects.compactMap { $0 as? PracticeSession }.reduce(0) { $0 + $1.duration }</code>. Na lista de músicas, usar <code>Section</code> por gênero. Historico da música: <code>@FetchRequest(predicate: NSPredicate(format: "song == %@", song), sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)])</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+</div><!-- /grid-medio -->
+
+<!-- ─────────────────────── FÁCIL ─────────────────────── -->
+<hr class="section-divider" />
+<div class="section-title" data-section="facil">
+  <h2>Fácil</h2>
+  <span class="section-badge facil">Fácil</span>
+  <span class="section-count" id="count-facil"></span>
+</div>
+<div class="card-grid" id="grid-facil">
+
+  <!-- MC-021 -->
+  <div class="card" data-id="MC-021" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-021</div>
+      <div class="card-title">Registrar sessões de prática realizadas</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Formulário de registro: data, duração, meta associada, notas livres.</li>
+            <li>Salvar sessão no CoreData ao confirmar.</li>
+            <li>Listar sessões em ordem cronológica reversa.</li>
+            <li>Swipe para deletar sessão.</li>
+            <li>Disparar atualização de streak e XP após salvar.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">Form</span><span class="tech-tag">@Environment managedObjectContext</span>
+          <p style="margin-top:10px">Entidade <code>PracticeSession</code>: <code>date: Date</code>, <code>duration: Double</code> (minutos), <code>notes: String?</code>, <code>goal: Goal?</code>, <code>mood: String?</code>. View: <code>Form { Section("Sessão") { DatePicker(...); Stepper("Duração: \(duration) min", value: $duration, in: 5...300, step: 5) } }</code>. Salvar: <code>@Environment(\.managedObjectContext) var context</code> + <code>let session = PracticeSession(context: context); try context.save()</code>. Delete: <code>.onDelete { context.delete(sessions[$0.first!]); try? context.save() }</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-022 -->
+  <div class="card" data-id="MC-022" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-022</div>
+      <div class="card-title">Cadastrar um objetivo musical</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Formulário: título, descrição, data alvo, categoria, dificuldade.</li>
+            <li>Validação: título não vazio, data alvo no futuro.</li>
+            <li>Salvar entidade <code>Goal</code> no CoreData.</li>
+            <li>Calcular e salvar XP de recompensa automático baseado na dificuldade.</li>
+            <li>Navegar de volta à lista após salvar com animação.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">NavigationView</span><span class="tech-tag">Form + DatePicker</span>
+          <p style="margin-top:10px">Entidade <code>Goal</code>: <code>title: String</code>, <code>goalDescription: String?</code>, <code>targetDate: Date</code>, <code>difficulty: String</code>, <code>xpReward: Int16</code>, <code>isCompleted: Bool</code>, <code>createdAt: Date</code>. <code>DatePicker("Data alvo", selection: $targetDate, in: Date()..., displayedComponents: .date)</code>. XP automático: <code>var xpReward: Int { difficulty == "hard" ? 250 : difficulty == "medium" ? 150 : 75 }</code>. Voltar após salvar: <code>@Environment(\.presentationMode) var mode; mode.wrappedValue.dismiss()</code> (iOS 15 — <code>dismiss()</code> direto está no iOS 15 via <code>@Environment(\.dismiss)</code>).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-023 -->
+  <div class="card" data-id="MC-023" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-023</div>
+      <div class="card-title">Notificar o usuário para realizar pausas conscientes durante a prática</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Configuração: intervalo de pausa (ex: a cada 25 minutos) nas preferências.</li>
+            <li>Agendar notificação repetida enquanto sessão está ativa.</li>
+            <li>Cancelar notificações ao encerrar a sessão.</li>
+            <li>Mensagens de pausa variadas (ex: "Relaxe os dedos por 2 minutos").</li>
+            <li>Quick action na notificação: "Continuar" sem abrir o app.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">UNTimeIntervalNotificationTrigger</span><span class="tech-tag">UNNotificationAction</span>
+          <p style="margin-top:10px">Ao iniciar sessão: <code>let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 25*60, repeats: true)</code>. Conteúdo: <code>content.title = "Hora de pausar!"; content.body = pauseMessages.randomElement()!; content.sound = .default</code>. Quick action: <code>let continueAction = UNNotificationAction(identifier: "CONTINUE", title: "Continuar", options: [])</code>. Registrar category: <code>UNUserNotificationCenter.current().setNotificationCategories([category])</code>. Ao encerrar sessão: <code>UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["practiceBreak"])</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-024 -->
+  <div class="card" data-id="MC-024" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-024</div>
+      <div class="card-title">Selecionar horário para realização de cada meta</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li><code>DatePicker</code> de hora/minuto no formulário de criação/edição da meta.</li>
+            <li>Salvar horário escolhido no CoreData em campo <code>scheduledTime: Date?</code>.</li>
+            <li>Agendar notificação diária para o horário definido.</li>
+            <li>Atualizar notificação se o horário for alterado.</li>
+            <li>Opção de desativar lembrete por meta específica.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">DatePicker</span><span class="tech-tag">UNCalendarNotificationTrigger</span>
+          <p style="margin-top:10px"><code>DatePicker("Horário", selection: $scheduledTime, displayedComponents: .hourAndMinute)</code>. Agendar: <code>var components = Calendar.current.dateComponents([.hour, .minute], from: scheduledTime); components.weekday = nil</code> (repete todo dia). <code>let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)</code>. ID da notificação: <code>"goal-\(goal.objectID.uriRepresentation().absoluteString)"</code> para poder remover/atualizar individualmente. Remover notificação antiga antes de reagendar ao editar horário.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-025 -->
+  <div class="card" data-id="MC-025" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-025</div>
+      <div class="card-title">Criar metas personalizadas relacionadas à prática do instrumento</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Campos adicionais opcionais: BPM alvo, acorde/técnica específica, número de repetições.</li>
+            <li>Selector de tipo de meta: Técnica, Repertório, Teoria, Criatividade.</li>
+            <li>Mostrar/ocultar campos dinamicamente conforme tipo selecionado.</li>
+            <li>Preview do card da meta antes de salvar.</li>
+            <li>Reutilizar formulário base de MC-022 com seções extras.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">Form Section</span><span class="tech-tag">Picker segmented</span>
+          <p style="margin-top:10px">Adicionar campos no <code>Goal</code> entity: <code>targetBPM: Int16</code>, <code>targetChord: String?</code>, <code>targetTechnique: String?</code>, <code>repetitions: Int16</code>, <code>goalType: String</code>. No formulário: <code>Picker("Tipo", selection: $goalType) { ... }.pickerStyle(.segmented)</code>. Condicional: <code>if goalType == "Técnica" { Section("Detalhes Técnicos") { TextField("Acorde alvo", ...) } }</code>. Usar <code>@State var goalType: GoalType = .technique</code> com enum para type safety.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-026 -->
+  <div class="card" data-id="MC-026" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-026</div>
+      <div class="card-title">Criar objetivos dentro de categorias ou estilos musicais</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Criar entidade <code>Category</code> no CoreData: <code>name</code>, <code>colorHex</code>, <code>icon</code> (SF Symbol).</li>
+            <li>Seed com categorias predefinidas: Blues, Jazz, Rock, Clássico, Técnica Pura, Teoria.</li>
+            <li>Seletor visual de categoria no formulário de objetivo (grid de ícones coloridos).</li>
+            <li>Filtrar lista de objetivos por categoria.</li>
+            <li>Opção de criar categoria personalizada.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">LazyVGrid</span><span class="tech-tag">Color(hex:)</span>
+          <p style="margin-top:10px">Seed no <code>PersistenceController.init</code>: verificar <code>UserDefaults</code> "categoriesSeeded". Seletor visual: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) { ForEach(categories) { cat in VStack { Image(systemName: cat.icon).foregroundColor(Color(hex: cat.colorHex)) Text(cat.name) }.onTapGesture { selectedCategory = cat } } }</code>. Destaque de selecionado: borda com <code>.overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.accentColor, lineWidth: 2))</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-027 -->
+  <div class="card" data-id="MC-027" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-027</div>
+      <div class="card-title">Visualizar trilha de metas diárias</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Tela principal: lista horizontal de metas do dia agendadas para hoje.</li>
+            <li>Cada card mostra: título, horário, status de conclusão, dificuldade.</li>
+            <li>Linha de progresso visual conectando os cards (como uma trilha).</li>
+            <li>Contador de metas concluídas vs total do dia.</li>
+            <li>Tap no card abre detalhe ou inicia sessão de prática.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">@FetchRequest + NSPredicate</span><span class="tech-tag">ScrollView HStack</span><span class="tech-tag">ZStack</span>
+          <p style="margin-top:10px">Predicate para hoje: <code>NSPredicate(format: "scheduledDate >= %@ AND scheduledDate < %@", startOfDay as CVarArg, endOfDay as CVarArg)</code>. Layout horizontal: <code>ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 0) { ForEach(goals) { goal in GoalCard(goal: goal).frame(width: 160) } } }</code>. Linha de trilha: <code>ZStack(alignment: .leading) { Rectangle().fill(Color.gray.opacity(0.2)).frame(height: 3); Rectangle().fill(Color.accentColor).frame(width: completionWidth, height: 3) }</code> usando <code>GeometryReader</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-028 -->
+  <div class="card" data-id="MC-028" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-028</div>
+      <div class="card-title">Visualizar todos os objetivos cadastrados</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Lista de todos os objetivos com filtro por: ativos, concluídos, expirados.</li>
+            <li>Cada item: título, categoria (com cor), data alvo, barra de progresso de metas vinculadas.</li>
+            <li>Ordenação: por data alvo, por criação, por categoria.</li>
+            <li>Swipe actions: marcar como concluído, deletar, editar.</li>
+            <li>Busca por título.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">@FetchRequest</span><span class="tech-tag">.searchable()</span><span class="tech-tag">.swipeActions()</span>
+          <p style="margin-top:10px">Usar <code>.searchable(text: $searchText)</code> (iOS 15) no <code>NavigationView</code>. Filtrar resultados: <code>goals.filter { searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText) }</code>. Swipe actions: <code>.swipeActions(edge: .trailing) { Button(role: .destructive) { delete(goal) } label: { Label("Deletar", systemImage: "trash") } }</code>. Barra de progresso de metas: <code>ProgressView(value: completedGoals, total: totalGoals).tint(categoryColor)</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-029 -->
+  <div class="card" data-id="MC-029" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-029</div>
+      <div class="card-title">Incrementar indicador de sequência (streak) ao concluir uma meta</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Verificar se o usuário já praticou hoje ao concluir meta.</li>
+            <li>Se última prática foi ontem: incrementar streak. Se gap &gt; 1 dia: resetar para 1.</li>
+            <li>Salvar <code>currentStreak</code> e <code>longestStreak</code> no CoreData em <code>UserProfile</code>.</li>
+            <li>Exibir animação de "flame" ao aumentar streak.</li>
+            <li>Streak visível no header/dashboard principal.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">Calendar</span><span class="tech-tag">@AppStorage</span><span class="tech-tag">withAnimation</span>
+          <p style="margin-top:10px">Lógica em <code>StreakService.update()</code>: <code>let lastDate = UserDefaults.standard.object(forKey: "lastPracticeDate") as? Date</code>. <code>if Calendar.current.isDateInYesterday(lastDate ?? .distantPast) { streak += 1 } else if !Calendar.current.isDateInToday(lastDate ?? .distantPast) { streak = 1 }</code>. Salvar: <code>UserDefaults.standard.set(Date(), forKey: "lastPracticeDate")</code>. Animação: <code>withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { showStreakBump = true }</code> com imagem SF Symbol "flame.fill" que escala temporariamente.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-030 -->
+  <div class="card" data-id="MC-030" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-030</div>
+      <div class="card-title">Receber recompensas ao concluir metas (XP e aumento de nível)</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Ao concluir meta: awarding XP com animação de "+XP" flutuante.</li>
+            <li>Verificar se o XP atingiu o threshold do próximo nível.</li>
+            <li>Se nivel up: exibir overlay full-screen de celebração com novo nível.</li>
+            <li>Barra de XP no perfil mostrando progresso para o próximo nível.</li>
+            <li>Histórico de XP ganho (log de recompensas).</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">withAnimation</span><span class="tech-tag">TimelineView (iOS 15)</span><span class="tech-tag">ZStack overlay</span>
+          <p style="margin-top:10px">Array de thresholds: <code>let levels = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000]</code>. Ao ganhar XP: <code>XPService.shared.award(xp: goal.xpReward)</code>. Se <code>newXP >= levels[currentLevel + 1]</code>: <code>withAnimation(.spring()) { showLevelUp = true }</code>. Overlay de level up: <code>.overlay { if showLevelUp { LevelUpView(newLevel: level).transition(.scale.combined(with: .opacity)) } }</code>. Animação XP flutuante: <code>@State var xpOffset: CGFloat = 0</code> animado de 0 a -60 com <code>withAnimation(.easeOut(duration: 1))</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-031 -->
+  <div class="card" data-id="MC-031" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-031</div>
+      <div class="card-title">Acumular XP e pontuação proporcional às atividades realizadas</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Criar <code>XPService.swift</code> centralizado para todas as operações de XP.</li>
+            <li>Fontes de XP: conclusão de meta, sessão de prática, badge conquistada, streak milestone.</li>
+            <li>Persistir XP total e nível em <code>UserProfile</code> no CoreData.</li>
+            <li>Log de XP com data, quantidade e motivo para histórico.</li>
+            <li>Propagar mudanças via <code>NotificationCenter</code> para views atualizarem.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">NotificationCenter</span><span class="tech-tag">Singleton Service</span>
+          <p style="margin-top:10px">Criar <code>class XPService { static let shared = XPService(); func award(xp: Int, reason: String, context: NSManagedObjectContext) { ... } }</code>. Dentro do método: buscar ou criar <code>UserProfile</code> singleton no CoreData, incrementar <code>totalXP</code>, criar <code>XPLogEntry</code>, verificar level up, salvar contexto. Emitir: <code>NotificationCenter.default.post(name: .xpAwarded, object: nil, userInfo: ["xp": xp, "newTotal": profile.totalXP])</code>. Views: <code>.onReceive(NotificationCenter.default.publisher(for: .xpAwarded)) { _ in updateXPDisplay() }</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-032 -->
+  <div class="card" data-id="MC-032" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-032</div>
+      <div class="card-title">Atribuir XP proporcional à dificuldade da atividade concluída</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Definir enum <code>GoalDifficulty</code> com multiplicador de XP.</li>
+            <li>XP base por tipo de atividade; multiplicar pelo fator de dificuldade.</li>
+            <li>Exibir o XP que será ganho antes do usuário concluir a meta.</li>
+            <li>Bônus por conclusão antes da data alvo.</li>
+            <li>Penalidade zero — não subtrair XP por não cumprimento.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">enum + computed property</span><span class="tech-tag">XPService</span>
+          <p style="margin-top:10px">Definir: <code>enum GoalDifficulty: String, CaseIterable { case easy = "Fácil", medium = "Médio", hard = "Difícil"; var xpMultiplier: Double { switch self { case .easy: return 1.0; case .medium: return 1.5; case .hard: return 2.5 } } }</code>. Cálculo: <code>let baseXP = 50; let finalXP = Int(Double(baseXP) * difficulty.xpMultiplier)</code>. Bônus de antecipação: <code>if goal.targetDate > Date() { finalXP = Int(Double(finalXP) * 1.2) }</code>. Salvar <code>goal.xpReward = Int16(finalXP)</code> na criação.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-033 -->
+  <div class="card" data-id="MC-033" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-033</div>
+      <div class="card-title">Conquistar badges ao atingir marcos específicos (incluindo secretas)</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Definir catálogo de badges: condição, ícone, título, descrição, se é secreta.</li>
+            <li><code>BadgeService</code> avalia condições após cada ação significativa.</li>
+            <li>Badges secretas aparecem como "?" na galeria até serem desbloqueadas.</li>
+            <li>Notificação local ao desbloquear nova badge.</li>
+            <li>Tela de galeria com todas as badges, status e data de desbloqueio.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData Badge entity</span><span class="tech-tag">LazyVGrid</span><span class="tech-tag">UNUserNotificationCenter</span>
+          <p style="margin-top:10px">Struct <code>BadgeDefinition</code>: <code>id: String, title: String, iconName: String, isSecret: Bool, condition: (UserStats) -> Bool</code>. Entidade CoreData <code>Badge</code>: <code>badgeID: String</code>, <code>unlockedDate: Date?</code>, <code>isUnlocked: Bool</code>. <code>BadgeService.evaluate(stats: UserStats)</code>: iterar definições, verificar se condição satisfeita e badge não desbloqueada, salvar e notificar. Galeria: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 90))]) { ForEach(badges) { badge in BadgeCell(badge: badge, isSecret: badge.isSecret && !badge.isUnlocked) } }</code>. Secreta: exibir <code>Image(systemName: "questionmark.circle.fill")</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-034 -->
+  <div class="card" data-id="MC-034" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-034</div>
+      <div class="card-title">Responder questionário inicial sobre nível de experiência musical</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Onboarding flow multi-página: Boas-vindas → Nível → Instrumento → Acordes → Técnicas → Pronto.</li>
+            <li>Seleção de nível: Iniciante, Intermediário, Avançado com descrições.</li>
+            <li>Salvar nível em <code>UserProfile</code> CoreData e em <code>@AppStorage</code> para acesso global.</li>
+            <li>Marcar onboarding como concluído para não exibir novamente.</li>
+            <li>Opção de refazer o questionário nas configurações.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">TabView .page style</span><span class="tech-tag">@AppStorage</span><span class="tech-tag">fullScreenCover</span>
+          <p style="margin-top:10px"><code>@AppStorage("onboardingComplete") var onboardingComplete = false</code>. No <code>ContentView</code>: <code>.fullScreenCover(isPresented: .constant(!onboardingComplete)) { OnboardingView() }</code>. <code>OnboardingView</code>: <code>TabView(selection: $currentPage) { WelcomePage().tag(0); LevelPage().tag(1); ... }.tabViewStyle(.page(indexDisplayMode: .always))</code>. Ao finalizar: <code>onboardingComplete = true</code> e seed inicial de dados do <code>UserProfile</code> no CoreData (nível, instrumento).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-035 -->
+  <div class="card" data-id="MC-035" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-035</div>
+      <div class="card-title">Selecionar acordes que já domina durante o onboarding</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Lista de acordes predefinidos: Am, Em, G, C, D, F, Bm, A7, E7, Dm, G7, etc.</li>
+            <li>Interface de múltipla seleção com chips coloridos por dificuldade do acorde.</li>
+            <li>Salvar acordes selecionados como relação <code>UserProfile.masteredChords</code>.</li>
+            <li>Exibir contador "X acordes selecionados".</li>
+            <li>Editável nas configurações após o onboarding.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData</span><span class="tech-tag">LazyVGrid</span><span class="tech-tag">Set selection</span>
+          <p style="margin-top:10px">Entidade <code>Chord</code>: <code>name: String</code>, <code>difficulty: String</code>. Seed no <code>PersistenceController</code>. <code>@State var selectedChords: Set&lt;NSManagedObjectID&gt; = []</code>. Grid de chips: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))]) { ForEach(chords) { chord in ChordChip(name: chord.name, isSelected: selectedChords.contains(chord.objectID)).onTapGesture { toggleSelection(chord) } } }</code>. Ao concluir onboarding: setar relação no <code>UserProfile.masteredChords</code> (NSSet) e salvar contexto.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-036 -->
+  <div class="card" data-id="MC-036" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-036</div>
+      <div class="card-title">Selecionar técnicas que já pratica durante o onboarding</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Lista de técnicas: Pestana, Fingerpicking, Palm Mute, Hammer-on, Pull-off, Bend, Vibrato, Sweep Picking.</li>
+            <li>Cada técnica com ícone e breve descrição (ex: "Pestana — dedo indicador cobrindo todas as cordas").</li>
+            <li>Seleção múltipla com toggle visual.</li>
+            <li>Salvar em relação <code>UserProfile.practicedTechniques</code>.</li>
+            <li>Usar o mesmo padrão de componente de MC-035.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">CoreData Technique entity</span><span class="tech-tag">List multi-select</span>
+          <p style="margin-top:10px">Mesma arquitetura de MC-035 com entidade <code>Technique</code>: <code>name: String</code>, <code>techniqueDescription: String</code>, <code>difficulty: String</code>. Seed: 8 técnicas listadas. Alternativamente, usar <code>List(techniques, selection: $selectedTechniques)</code> com <code>EditButton()</code> para seleção nativa do iOS. Relação no UserProfile: <code>practicedTechniques: NSSet</code> (to-many). Exibir técnicas selecionadas na tela de perfil após onboarding.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-037 -->
+  <div class="card" data-id="MC-037" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-037</div>
+      <div class="card-title">Gravar áudio durante uma sessão de prática e vinculá-lo a uma meta</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Botão de gravação na tela de sessão ativa (mic icon).</li>
+            <li>Indicador visual de gravação em andamento (onda animada ou timer).</li>
+            <li>Parar gravação e salvar arquivo <code>.m4a</code> no Documents.</li>
+            <li>Prompt pós-gravação: vincular a qual meta?</li>
+            <li>Listar gravações do dia na tela de sessão.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">AVAudioRecorder</span><span class="tech-tag">@StateObject</span><span class="tech-tag">AVAudioSession</span>
+          <p style="margin-top:10px">Classe <code>AudioRecorderService: ObservableObject</code> com <code>@Published var isRecording: Bool</code>, <code>@Published var recordingURL: URL?</code>. Configurar sessão e criar <code>AVAudioRecorder</code> no método <code>startRecording()</code>. Indicador animado: <code>Circle().scaleEffect(isRecording ? 1.3 : 1.0).animation(.easeInOut(duration: 0.5).repeatForever(), value: isRecording)</code>. Após <code>stopRecording()</code>: exibir <code>.sheet(isPresented: $showLinkSheet) { GoalPickerView(onSelect: linkRecording) }</code>. Adicionar <code>NSMicrophoneUsageDescription</code> no <code>Info.plist</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-038 -->
+  <div class="card" data-id="MC-038" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-038</div>
+      <div class="card-title">Visualizar histórico de gravações organizadas por objetivo</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Lista de gravações agrupadas por objetivo (seções expansíveis).</li>
+            <li>Cada item: data, duração, botão de play inline.</li>
+            <li>Filtro por tipo: áudio e/ou vídeo.</li>
+            <li>Swipe para deletar (com confirmação e remoção do arquivo em disco).</li>
+            <li>Contador total de gravações e tempo acumulado.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">@SectionedFetchRequest</span><span class="tech-tag">AVAudioPlayer</span><span class="tech-tag">FileManager</span>
+          <p style="margin-top:10px">Usar <code>@SectionedFetchRequest(sectionIdentifier: \.goal?.title, ...)</code> (disponível iOS 15) para agrupar gravações por objetivo. Reprodução inline: <code>@StateObject var player: AudioPlayerService</code> com <code>AVAudioPlayer</code>. Botão play: <code>Button { player.toggle(url: recording.fileURL) } label: { Image(systemName: player.isPlaying ? "pause.circle" : "play.circle") }</code>. Ao deletar: <code>try FileManager.default.removeItem(at: recording.fileURL); context.delete(recording); try context.save()</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-039 -->
+  <div class="card" data-id="MC-039" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-039</div>
+      <div class="card-title">Usar cronômetro durante uma sessão para registrar tempo efetivo</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Cronômetro visível na tela de sessão ativa no formato HH:MM:SS.</li>
+            <li>Controles: Iniciar, Pausar, Retomar, Encerrar sessão.</li>
+            <li>Ao encerrar: salvar tempo total como <code>duration</code> da sessão.</li>
+            <li>Continuar rodando em background com notificação da sessão ativa.</li>
+            <li>Aviso se sessão ultrapassar 3 horas sem pausa.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">Timer.publish (Combine)</span><span class="tech-tag">@State</span><span class="tech-tag">Background Task</span>
+          <p style="margin-top:10px"><code>let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()</code>. <code>@State var elapsedSeconds: Int = 0; @State var isRunning = false</code>. <code>.onReceive(timer) { _ in if isRunning { elapsedSeconds += 1 } }</code>. Formatação: <code>var timeString: String { let h = elapsedSeconds/3600; let m = (elapsedSeconds%3600)/60; let s = elapsedSeconds%60; return String(format: "%02d:%02d:%02d", h, m, s) }</code>. Background: salvar <code>startDate</code> no <code>scenePhase.background</code> e recalcular ao retornar. Cancelar timer com <code>.cancel()</code> ao encerrar.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-040 -->
+  <div class="card" data-id="MC-040" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-040</div>
+      <div class="card-title">Registrar como o usuário se sentiu ao concluir uma sessão de prática</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Sheet pós-sessão com seletor de humor visual (emojis grandes, tap para selecionar).</li>
+            <li>Humores: Motivado, Neutro, Frustrado, Cansado, Empolgado.</li>
+            <li>Salvar humor na entidade <code>PracticeSession.mood</code>.</li>
+            <li>Campo opcional de nota sobre a sessão.</li>
+            <li>Visualizar tendência de humor ao longo do tempo nas estatísticas.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">enum Mood</span><span class="tech-tag">.sheet(isPresented:)</span><span class="tech-tag">HStack emoji selector</span>
+          <p style="margin-top:10px">Enum: <code>enum Mood: String, CaseIterable, Identifiable { case motivated = "😊", neutral = "😐", frustrated = "😤", tired = "😴", excited = "🤩"; var label: String { switch self { case .motivated: return "Motivado"; ... } } }</code>. View: <code>HStack(spacing: 16) { ForEach(Mood.allCases) { mood in Text(mood.rawValue).font(.largeTitle).scaleEffect(selectedMood == mood ? 1.4 : 1.0).onTapGesture { withAnimation { selectedMood = mood } } } }</code>. Salvar <code>session.mood = selectedMood?.label</code> no CoreData.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MC-041 -->
+  <div class="card" data-id="MC-041" data-difficulty="facil">
+    <div class="card-header">
+      <span class="badge facil">Fácil</span>
+      <label class="done-checkbox"><input type="checkbox" /><span class="check-icon"></span><span class="done-label">Concluir</span></label>
+    </div>
+    <div class="card-body">
+      <div class="card-id">MC-041</div>
+      <div class="card-title">Visualizar área de conquistas acumuladas (músicas, acordes, sequências)</div>
+      <details>
+        <summary>Descrição / Sub-tarefas <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <ul>
+            <li>Tela de conquistas com seções: Estatísticas Gerais, Badges, Músicas Dominadas, Acordes Aprendidos.</li>
+            <li>Estatísticas: XP total, nível, maior streak, horas praticadas, metas concluídas.</li>
+            <li>Galeria de badges desbloqueadas com data.</li>
+            <li>Lista de músicas marcadas como dominadas com data de conclusão.</li>
+            <li>Gráfico de acordes aprendidos ao longo do tempo.</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Guia de Implementação Swift (iOS 15) <span class="chevron">▼</span></summary>
+        <div class="details-body facil">
+          <p class="impl-header">Frameworks &amp; APIs</p>
+          <span class="tech-tag">ScrollView</span><span class="tech-tag">LazyVGrid</span><span class="tech-tag">CoreData aggregates</span>
+          <p style="margin-top:10px">Estrutura da view: <code>ScrollView { VStack(spacing: 24) { StatsHeaderView(); BadgeGalleryView(); MasteredSongsView(); ChordProgressView() } }</code>. Stats: buscar <code>UserProfile</code> singleton do CoreData. Total de horas: agregar <code>PracticeSession.duration</code> somando no Swift. Badges: <code>@FetchRequest(predicate: NSPredicate(format: "isUnlocked == true"), sortDescriptors: [NSSortDescriptor(key: "unlockedDate", ascending: false)])</code>. Acordes ao longo do tempo: array de <code>SkillSnapshot.chordsCount</code> por data renderizado com <code>Path</code> em <code>GeometryReader</code>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+</div><!-- /grid-facil -->
+
+<div class="empty-state" id="emptyState">
+  <div class="emoji">🔍</div>
+  <p>Nenhum card encontrado com os filtros atuais.</p>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════ JAVASCRIPT ═══════════════════════════════════ -->
+<script>
+  const STORAGE_KEY = 'mc_backlog_done_v1';
+  const HIDE_DONE_KEY = 'mc_hide_done_v1';
+  const FILTER_KEY = 'mc_filter_v1';
+
+  // ── State ──
+  let doneSet = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+  let hideDone = localStorage.getItem(HIDE_DONE_KEY) === 'true';
+  let activeFilter = localStorage.getItem(FILTER_KEY) || 'all';
+
+  const allCards = document.querySelectorAll('.card');
+  const totalCards = allCards.length;
+
+  // ── Init ──
+  function init() {
+    restoreCheckboxes();
+    applyFilter(activeFilter);
+    applyHideDone();
+    updateProgress();
+    updateSectionCounts();
+    setFilterActive(activeFilter);
+    setHideDoneActive(hideDone);
+
+    // Checkbox listeners
+    allCards.forEach(card => {
+      const cb = card.querySelector('input[type="checkbox"]');
+      cb.addEventListener('change', () => onCheckboxChange(card, cb));
+    });
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        localStorage.setItem(FILTER_KEY, activeFilter);
+        applyFilter(activeFilter);
+        setFilterActive(activeFilter);
+        updateSectionCounts();
+        checkEmptyState();
+      });
+    });
+
+    // Hide done toggle
+    document.getElementById('hideDoneBtn').addEventListener('click', () => {
+      hideDone = !hideDone;
+      localStorage.setItem(HIDE_DONE_KEY, hideDone);
+      applyHideDone();
+      setHideDoneActive(hideDone);
+      updateSectionCounts();
+      checkEmptyState();
+    });
+  }
+
+  // ── Checkbox change ──
+  function onCheckboxChange(card, cb) {
+    const id = card.dataset.id;
+    if (cb.checked) {
+      doneSet.add(id);
+      card.classList.add('done');
+    } else {
+      doneSet.delete(id);
+      card.classList.remove('done');
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...doneSet]));
+    applyHideDone();
+    updateProgress();
+    updateSectionCounts();
+    checkEmptyState();
+  }
+
+  // ── Restore saved state ──
+  function restoreCheckboxes() {
+    allCards.forEach(card => {
+      const id = card.dataset.id;
+      const cb = card.querySelector('input[type="checkbox"]');
+      if (doneSet.has(id)) {
+        cb.checked = true;
+        card.classList.add('done');
+      }
+    });
+  }
+
+  // ── Filter by difficulty ──
+  function applyFilter(filter) {
+    allCards.forEach(card => {
+      const diff = card.dataset.difficulty;
+      const visible = filter === 'all' || diff === filter;
+      card.dataset.filterVisible = visible ? 'true' : 'false';
+      refreshVisibility(card);
+    });
+
+    // Show/hide section titles
+    ['dificil', 'medio', 'facil'].forEach(section => {
+      const show = filter === 'all' || filter === section;
+      const titleEl = document.querySelector(`.section-title[data-section="${section}"]`);
+      const gridEl = document.getElementById(`grid-${section}`);
+      const hrEl = titleEl ? titleEl.previousElementSibling : null;
+      if (titleEl) titleEl.style.display = show ? '' : 'none';
+      if (gridEl) gridEl.style.display = show ? '' : 'none';
+      if (hrEl && hrEl.classList.contains('section-divider')) hrEl.style.display = show ? '' : 'none';
+    });
+  }
+
+  // ── Hide/show done cards ──
+  function applyHideDone() {
+    allCards.forEach(card => {
+      card.dataset.doneHidden = (hideDone && card.classList.contains('done')) ? 'true' : 'false';
+      refreshVisibility(card);
+    });
+  }
+
+  // ── Combine filter + hide-done to set visibility ──
+  function refreshVisibility(card) {
+    const filterOk = card.dataset.filterVisible !== 'false';
+    const doneHidden = card.dataset.doneHidden === 'true';
+    card.classList.toggle('hidden', !filterOk || doneHidden);
+  }
+
+  // ── Progress counter ──
+  function updateProgress() {
+    const done = doneSet.size;
+    document.getElementById('progressLabel').textContent = `${done} / ${totalCards} tasks concluídas`;
+    const pct = totalCards > 0 ? (done / totalCards) * 100 : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  // ── Section counts ──
+  function updateSectionCounts() {
+    ['dificil', 'medio', 'facil'].forEach(section => {
+      const grid = document.getElementById(`grid-${section}`);
+      if (!grid) return;
+      const cards = grid.querySelectorAll('.card');
+      const visible = grid.querySelectorAll('.card:not(.hidden)').length;
+      const total = cards.length;
+      const done = [...cards].filter(c => c.classList.contains('done')).length;
+      const el = document.getElementById(`count-${section}`);
+      if (el) el.textContent = `${done}/${total} concluídas · ${visible} visíveis`;
+    });
+  }
+
+  // ── Empty state ──
+  function checkEmptyState() {
+    const anyVisible = [...allCards].some(c => !c.classList.contains('hidden'));
+    document.getElementById('emptyState').style.display = anyVisible ? 'none' : 'block';
+  }
+
+  // ── UI helpers ──
+  function setFilterActive(filter) {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+  }
+
+  function setHideDoneActive(active) {
+    document.getElementById('hideDoneBtn').classList.toggle('active', active);
+  }
+
+  init();
+</script>
+</body>
+</html>
