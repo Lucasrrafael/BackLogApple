@@ -5,7 +5,8 @@
   },
   "devDependencies": {
     "dotenv": "^16.4.5",
-    "node-html-parser": "^6.1.13"
+    "node-html-parser": "^6.1.13",
+    "vercel": "^54.9.0"
   },
   "scripts": {
     "seed": "node scripts/seed-from-html.js"

@@ -1,0 +1,407 @@
+[
+  {
+    "id": "MC-001",
+    "title": "Selecionar metas predefinidas para agilizar a criação",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar banco de templates de metas no CoreData com categorias (escalas, acordes, ritmos, repertório).</li>\n            <li>Construir tela de seleção com <code>List</code> agrupado por categoria.</li>\n            <li>Ao selecionar um template, pré-preencher o formulário de criação de meta.</li>\n            <li>Permitir ao usuário personalizar os campos antes de salvar.</li>\n            <li>Implementar barra de busca para filtrar templates.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">SwiftUI</span><span class=\"tech-tag\">NavigationView</span>\n          <p style=\"margin-top:10px\">Criar entidade <code>GoalTemplate</code> no CoreData com campos <code>title</code>, <code>category</code>, <code>difficulty</code>, <code>defaultDuration</code>. Seed os templates no <code>PersistenceController</code> via <code>viewContext</code> na primeira execução (verificar com <code>UserDefaults</code>). Na UI, usar <code>@FetchRequest(sortDescriptors:)</code> com seção por categoria. Ao tocar em um item, navegar via <code>NavigationLink</code> para o <code>GoalFormView</code> com os campos pré-preenchidos via <code>@Binding</code>.</p>\n          <div class=\"note-box\">iOS 15: use <code>NavigationView</code> + <code>navigationTitle</code>. Não use <code>NavigationStack</code> (iOS 16+).</div>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-002a",
+    "title": "Gemini API — Configurar cliente HTTP e modelos Codable",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar <code>GeminiService.swift</code> como singleton com método <code>generate(prompt:)</code> assíncrono.</li>\n            <li>Modelar structs <code>Codable</code>: <code>GeminiRequest</code>, <code>GeminiContent</code>, <code>GeminiPart</code>, <code>GeminiResponse</code>.</li>\n            <li>Armazenar API Key no <code>Info.plist</code> e ler via <code>Bundle.main.infoDictionary</code>.</li>\n            <li>Tratar erros de rede e respostas inválidas com enum de <code>GeminiError</code>.</li>\n            <li>Escrever testes unitários mockando a resposta da API.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">URLSession</span><span class=\"tech-tag\">Codable</span><span class=\"tech-tag\">async/await</span>\n          <p style=\"margin-top:10px\">Usar <code>URLSession.shared.data(for: URLRequest)</code> com <code>async/await</code> (disponível no iOS 15). Endpoint: <code>https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=API_KEY</code>. Body em JSON com <code>JSONEncoder</code>. Decodificar com <code>JSONDecoder</code>. Propagar erros com <code>throws</code>.</p>\n          <div class=\"note-box\">Nunca hardcode a API Key no código-fonte. Use <code>Info.plist</code> com uma variável de ambiente no scheme do Xcode para desenvolvimento.</div>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-002b",
+    "title": "Gemini API — Prompt builder e UI de sugestões de metas",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Construir prompt contextualizado com nível do usuário, instrumento e objetivos cadastrados.</li>\n            <li>Exibir loading state com <code>ProgressView</code> enquanto aguarda resposta.</li>\n            <li>Apresentar sugestões geradas em <code>.sheet()</code> com lista selecionável.</li>\n            <li>Ao selecionar sugestão, pré-preencher o formulário de criação de meta.</li>\n            <li>Tratar e exibir erros de forma amigável (sem conexão, erro da API, etc.).</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">SwiftUI sheet</span><span class=\"tech-tag\">@ObservableObject</span><span class=\"tech-tag\">Task</span>\n          <p style=\"margin-top:10px\">Criar <code>GeminiViewModel: ObservableObject</code> com <code>@Published var suggestions: [String]</code> e <code>@Published var isLoading: Bool</code>. Chamar <code>GeminiService.shared.generate(prompt:)</code> dentro de <code>Task { }</code>. Prompt template: <em>\"Sugira 5 metas de prática de guitarra para um aluno [nível] que quer [objetivo]. Retorne como lista numerada.\"</em> Parsear a resposta dividindo por <code>\\n</code>. Exibir via <code>.sheet(isPresented:)</code> com <code>List</code> e botão de confirmação.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-003",
+    "title": "Exibir retrospectiva comparativa entre início e conclusão de objetivo",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Ao marcar um objetivo como concluído, abrir tela de retrospectiva automática.</li>\n            <li>Comparar snapshot inicial (dados de onboarding ou criação) com dados atuais.</li>\n            <li>Exibir métricas: tempo total praticado, XP ganho, acordes/técnicas aprendidos durante o objetivo.</li>\n            <li>Mostrar gravações de áudio/vídeo do início e fim do objetivo (se existirem).</li>\n            <li>Botão de compartilhar a retrospectiva como imagem.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">SwiftUI</span><span class=\"tech-tag\">UIActivityViewController</span>\n          <p style=\"margin-top:10px\">Salvar <code>GoalSnapshot</code> no CoreData no momento da criação do objetivo (XP inicial, accordes dominados, etc.). Ao concluir, buscar o snapshot via <code>@FetchRequest</code> usando o <code>objectID</code> do objetivo. Renderizar comparativo com <code>VStack</code> de barras customizadas via <code>GeometryReader + RoundedRectangle</code> (sem Charts do iOS 16). Para compartilhar: usar <code>ImageRenderer</code> (iOS 16) não está disponível — usar <code>UIGraphicsImageRenderer</code> para capturar a <code>UIView</code> via <code>UIViewRepresentable</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-004a",
+    "title": "Widget da Home — Configurar extensão WidgetKit e App Group",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Adicionar target \"Widget Extension\" no Xcode (File → New Target → Widget Extension).</li>\n            <li>Ativar capability \"App Groups\" em ambos os targets (app principal e widget).</li>\n            <li>Criar container <code>UserDefaults(suiteName: \"group.com.seuapp.matrizzcinema\")</code> para compartilhar dados.</li>\n            <li>Criar <code>SharedDataManager.swift</code> para serializar e ler o resumo de metas do dia.</li>\n            <li>Configurar <code>Info.plist</code> do widget com descrição e nome corretos.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">WidgetKit</span><span class=\"tech-tag\">App Groups</span><span class=\"tech-tag\">UserDefaults</span>\n          <p style=\"margin-top:10px\">O widget NÃO tem acesso direto ao CoreData do app principal. Use <code>UserDefaults</code> com App Group suite para passar um struct simples codificado em JSON. No app principal: ao salvar/alterar metas, chamar <code>SharedDataManager.write(dailySummary)</code>. No widget target: <code>SharedDataManager.read()</code>. Alternativamente, usar CoreData com <code>NSPersistentContainer(name:)</code> apontando para o mesmo <code>App Group Container URL</code> em ambos os targets.</p>\n          <div class=\"note-box\">WidgetKit disponível desde iOS 14. Compatível com iOS 15 e Xcode 13.</div>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-004b",
+    "title": "Widget da Home — Timeline Provider e UI do widget",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Implementar <code>TimelineProvider</code> com <code>getSnapshot</code> e <code>getTimeline</code>.</li>\n            <li>Definir <code>TimelineEntry</code> com data, metas do dia e streak atual.</li>\n            <li>Construir a view do widget: metas do dia em lista, contador de sequência.</li>\n            <li>Suportar tamanhos <code>systemSmall</code> e <code>systemMedium</code>.</li>\n            <li>Configurar política de atualização: <code>.atEnd</code> ou a cada 30 minutos.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">WidgetKit</span><span class=\"tech-tag\">TimelineProvider</span><span class=\"tech-tag\">StaticConfiguration</span>\n          <p style=\"margin-top:10px\">Usar <code>StaticConfiguration(kind:provider:content:)</code> (sem intenções). O <code>TimelineProvider</code> deve retornar entradas para o dia atual. Cada <code>TimelineEntry</code> contém <code>dailyGoals: [GoalSummary]</code> onde <code>GoalSummary</code> é um struct <code>Codable</code> simples. Widget view usa <code>@Environment(\\.widgetFamily)</code> para adaptar layout. Política: <code>.after(Date().addingTimeInterval(1800))</code> para refresh a cada 30 minutos.</p>\n          <div class=\"note-box\">Widgets NÃO suportam animações SwiftUI. Para animação do mascote, use entradas de timeline com imagens estáticas diferentes.</div>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-005",
+    "title": "Desbloquear funcionalidades progressivamente conforme XP acumulado",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Definir enum de features com threshold mínimo de XP para desbloqueio.</li>\n            <li>Criar <code>ViewModifier</code> que sobrepõe ícone de cadeado se feature bloqueada.</li>\n            <li>Exibir modal explicando o que é necessário para desbloquear ao tocar em item bloqueado.</li>\n            <li>Animação de \"desbloqueio\" ao atingir o XP necessário pela primeira vez.</li>\n            <li>Persistir estado de desbloqueio para não reanimar features já vistas.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">SwiftUI ViewModifier</span><span class=\"tech-tag\">@AppStorage</span><span class=\"tech-tag\">withAnimation</span>\n          <p style=\"margin-top:10px\">Definir <code>enum FeatureGate: String, CaseIterable</code> com <code>var xpRequired: Int</code>. Criar <code>struct LockedOverlay: ViewModifier</code> que verifica <code>@AppStorage(\"userXP\")</code> e aplica <code>.overlay</code> com <code>ZStack</code> contendo ícone SF Symbol \"lock.fill\" se bloqueado. No <code>XPService</code>, após atualizar XP, chamar <code>NotificationCenter.default.post(name: .xpUpdated, ...).</code> Views observam com <code>.onReceive</code> e chamam <code>withAnimation(.spring()) { }</code> para revelar o conteúdo.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-006",
+    "title": "Comparar habilidades técnicas atuais com registros anteriores",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar entidade <code>SkillSnapshot</code> no CoreData com data, acordes dominados, técnicas e repertório.</li>\n            <li>Salvar snapshot automaticamente em marcos: conclusão de objetivo, badge conquistada.</li>\n            <li>Tela de comparação: exibir gráfico de barras lado a lado (snapshot mais antigo vs atual).</li>\n            <li>Permitir selecionar qualquer dois snapshots para comparar.</li>\n            <li>Destacar diferenças positivas em verde e regressões em laranja.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">GeometryReader</span><span class=\"tech-tag\">Path</span>\n          <p style=\"margin-top:10px\">Entidade CoreData: <code>SkillSnapshot</code> com <code>date: Date</code>, <code>chordsCount: Int16</code>, <code>techniquesCount: Int16</code>, <code>repertoireCount: Int16</code>. Gráfico de barras customizado: <code>GeometryReader { geo in HStack { ForEach(...) { bar in RoundedRectangle(cornerRadius: 4).frame(width: ..., height: geo.size.height * ratio) } } }</code>. Não usar o framework <code>Charts</code> (iOS 16+). Usar <code>Color(hex:)</code> extension para cores dinamicas de progresso.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-007",
+    "title": "Notificar o usuário ao superar uma barreira técnica registrada",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar entidade <code>TechnicalBarrier</code> no CoreData: descrição, data do primeiro fracasso, status.</li>\n            <li>Ao concluir uma meta, verificar se ela corresponde a uma barreira cadastrada ainda não superada.</li>\n            <li>Se superada: disparar notificação local celebratória e atualizar status da barreira.</li>\n            <li>Exibir histórico de barreiras superadas na área de conquistas.</li>\n            <li>Opção de marcar manualmente uma meta/prática como \"barreira técnica\".</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">UNUserNotificationCenter</span><span class=\"tech-tag\">CoreData</span>\n          <p style=\"margin-top:10px\">Na conclusão de meta, chamar <code>BarrierService.check(completedGoal:)</code>. O service faz <code>NSFetchRequest&lt;TechnicalBarrier&gt;</code> com predicate de keyword match. Se encontrado e <code>isOvercome == false</code>: criar <code>UNMutableNotificationContent</code> com título \"Barreira Superada! 🎸\", disparar com <code>UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)</code>. Atualizar <code>barrier.isOvercome = true</code> e salvar contexto. Solicitar permissão de notificação no onboarding com <code>UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-008",
+    "title": "Visualizar retrospectiva completa de progresso musical",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Tela de retrospectiva com abas deslizáveis: Tempo, Metas, Streak, Gravações, XP.</li>\n            <li>Calcular agregados: total de horas praticadas, metas concluídas por semana, maior streak.</li>\n            <li>Gráficos de linha de evolução de XP ao longo do tempo.</li>\n            <li>Galeria de gravações mais relevantes.</li>\n            <li>Filtro de período: semana, mês, trimestre, total.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">TabView</span><span class=\"tech-tag\">PageTabViewStyle</span><span class=\"tech-tag\">CoreData NSExpression</span>\n          <p style=\"margin-top:10px\">Usar <code>TabView { ... }.tabViewStyle(.page(indexDisplayMode: .always))</code> para abas deslizáveis. Para agregar tempo de sessões: <code>NSFetchRequest</code> com <code>NSExpression(forFunction: \"sum:\", arguments:)</code> no campo <code>duration</code>. Gráfico de linha: <code>Path</code> que conecta pontos <code>CGPoint</code> calculados de um array de pares <code>(Date, XP)</code> dentro de <code>GeometryReader</code>. Filtro de período: <code>@State var selectedPeriod: Period</code> que atualiza o predicado do fetch.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-009a",
+    "title": "Comparação de áudio — Armazenamento e vinculação de gravações",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar entidade <code>AudioRecording</code> no CoreData: <code>filePath</code>, <code>date</code>, <code>duration</code>, relação com <code>Goal</code>.</li>\n            <li>Salvar gravações no diretório <code>Documents</code> com convenção de nome: <code>{goalID}_{timestamp}.m4a</code>.</li>\n            <li>Implementar tela de listagem de gravações agrupadas por objetivo.</li>\n            <li>Permitir selecionar duas gravações da mesma meta para comparação.</li>\n            <li>Validar que o arquivo existe antes de tentar reproduzir.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">AVAudioRecorder</span><span class=\"tech-tag\">AVAudioSession</span><span class=\"tech-tag\">FileManager</span>\n          <p style=\"margin-top:10px\">Configurar sessão: <code>try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)</code>. URL do arquivo: <code>FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(\"goal_\\(id)_\\(ISO8601DateFormatter().string(from: Date())).m4a\")</code>. Configurações do recorder: <code>[.formatIDKey: kAudioFormatMPEG4AAC, .sampleRateKey: 44100, .numberOfChannelsKey: 1, .encoderAudioQualityKey: AVAudioQuality.high.rawValue]</code>. Adicionar <code>NSMicrophoneUsageDescription</code> no <code>Info.plist</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-009b",
+    "title": "Comparação de áudio — UI de reprodução e comparação lado a lado",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Tela com duas colunas: gravação antiga (data) e gravação nova (data).</li>\n            <li>Controles de play/pause independentes para cada gravação.</li>\n            <li>Visualização de nível de áudio com barras animadas simples durante reprodução.</li>\n            <li>Botão \"Reproduzir Ambas\" para iniciar simultaneamente.</li>\n            <li>Exibir duração e data de cada gravação.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">AVAudioPlayer</span><span class=\"tech-tag\">Combine</span><span class=\"tech-tag\">Timer.publish</span>\n          <p style=\"margin-top:10px\">Criar <code>AudioPlayerViewModel: ObservableObject</code> com dois <code>AVAudioPlayer</code> (playerA e playerB). Controles bindados a <code>@Published var isPlayingA: Bool</code> e <code>isPlayingB: Bool</code>. Para as barras de visualização: usar <code>player.averagePower(forChannel: 0)</code> e atualizar via <code>Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()</code>. Converter <code>averagePower</code> (dB, -160 a 0) para escala 0–1 com fórmula: <code>pow(10, power / 20)</code>. Animar barras com <code>withAnimation(.linear(duration: 0.1))</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-010",
+    "title": "Comparar gravações de vídeo da mesma meta em datas diferentes",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Criar entidade <code>VideoRecording</code> no CoreData: <code>filePath</code>, <code>date</code>, <code>thumbnailPath</code>, relação com <code>Goal</code>.</li>\n            <li>Tela de comparação com dois players de vídeo empilhados verticalmente (ou em split view).</li>\n            <li>Gerar thumbnail automaticamente após gravar usando <code>AVAssetImageGenerator</code>.</li>\n            <li>Controles de play/pause sincronizados opcionalmente.</li>\n            <li>Exibir data e duração de cada vídeo.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">AVKit</span><span class=\"tech-tag\">AVPlayer</span><span class=\"tech-tag\">AVAssetImageGenerator</span>\n          <p style=\"margin-top:10px\">Usar <code>VideoPlayer(player: AVPlayer(url: fileURL))</code> do framework <code>AVKit</code> (disponível iOS 14+). Dois <code>VideoPlayer</code> em <code>VStack</code>. Thumbnail: <code>let asset = AVAsset(url: url); let gen = AVAssetImageGenerator(asset: asset); gen.appliesPreferredTrackTransform = true; let cgImage = try gen.copyCGImage(at: .zero, actualTime: nil)</code>. Salvar thumbnail como JPEG no Documents e caminho no CoreData. Adicionar <code>NSCameraUsageDescription</code> e <code>NSPhotoLibraryUsageDescription</code> no <code>Info.plist</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-011",
+    "title": "Gerar retrospectiva automática com as gravações mais representativas",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Heurística de seleção: primeira gravação de cada objetivo, gravação do mês de maior XP ganho.</li>\n            <li>Construir playlist ordenada cronologicamente com títulos contextuais.</li>\n            <li>Reprodução sequencial automática com transição entre gravações.</li>\n            <li>Opção de regenerar a seleção ou editar manualmente a playlist.</li>\n            <li>Compartilhar a playlist como lista de arquivos de áudio.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">AVQueuePlayer</span><span class=\"tech-tag\">CoreData NSSortDescriptor</span>\n          <p style=\"margin-top:10px\">Algoritmo de seleção em <code>RetrospectiveService.swift</code>: buscar <code>AudioRecording</code> ordenadas por <code>date ASC</code> com <code>NSSortDescriptor</code>. Agrupar por objetivo, pegar primeira e última. Adicionar a mais próxima de marcos de XP. Usar <code>AVQueuePlayer</code> para reprodução sequencial: <code>let items = urls.map { AVPlayerItem(url: $0) }; let player = AVQueuePlayer(items: items)</code>. Observar fim de cada item com <code>NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, ...)</code> para atualizar UI.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-012",
+    "title": "Reorganizar metas automaticamente quando há padrão de não cumprimento",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Rastrear <code>consecutiveFailures</code> por meta no CoreData.</li>\n            <li>Threshold: após 3 falhas consecutivas, acionar sugestão de versão simplificada via Gemini API.</li>\n            <li>Exibir <code>alert</code> ou sheet com a meta simplificada sugerida.</li>\n            <li>Se aceito: criar nova meta \"filha\" com relação <code>parentGoal</code> e arquivar a original.</li>\n            <li>Notificar o usuário sobre a sugestão de simplificação de forma não intrusiva.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">GeminiService (MC-002a)</span><span class=\"tech-tag\">.alert()</span>\n          <p style=\"margin-top:10px\">No <code>Goal</code> CoreData entity: campo <code>consecutiveFailures: Int16</code>. Ao encerrar sessão sem completar a meta: incrementar contador. Se <code>consecutiveFailures >= 3</code>: chamar <code>GeminiService.shared.generate(prompt: \"Simplifique esta meta de guitarra: '\\(goal.title)' para um aluno \\(userLevel)\")</code>. Exibir resultado com <code>.alert(\"Meta muito difícil?\", isPresented: $showSimplification) { ... }</code>. Relação CoreData: adicionar <code>parentGoal: Goal?</code> (to-one optional) na entidade.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-013",
+    "title": "Avaliar complexidade de nova meta e sugerir versão mais acessível",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Ao submeter formulário de nova meta, enviar título para análise da Gemini API.</li>\n            <li>Prompt: avaliar se a meta é adequada ao nível do usuário e retornar: adequada / complexa + sugestão.</li>\n            <li>Se complexa: exibir sheet com avaliação e meta alternativa mais simples.</li>\n            <li>Usuário pode aceitar a sugestão ou salvar a meta original mesmo assim.</li>\n            <li>Adicionar indicador visual de complexidade estimada no card da meta.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">GeminiService (MC-002a)</span><span class=\"tech-tag\">.sheet()</span><span class=\"tech-tag\">@State</span>\n          <p style=\"margin-top:10px\">Ao confirmar o formulário, chamar <code>Task { let result = try await GeminiService.shared.evaluate(goal: title, level: userLevel) }</code>. Prompt: <em>\"Dado que o músico é \\(level), esta meta é adequada: '\\(title)'? Responda: ADEQUADA ou COMPLEXA. Se COMPLEXA, sugira uma versão mais simples em uma linha.\"</em>. Parsear resposta para enum <code>ComplexityResult { case adequate, complex(suggestion: String) }</code>. Exibir sheet condicionalmente com <code>.sheet(item: $complexityResult)</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-014",
+    "title": "Enviar notificação de retrospectiva baseada em gravações antigas",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Ao abrir o app, verificar gravações com mais de 30, 90 ou 180 dias sem notificação enviada.</li>\n            <li>Agendar notificação local para próxima manhã se encontrar gravação elegível.</li>\n            <li>Notificação com deep link para abrir a gravação específica no app.</li>\n            <li>Registrar quais gravações já geraram notificação para evitar repetições.</li>\n            <li>Limite: máximo 1 notificação deste tipo por semana.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">UNCalendarNotificationTrigger</span><span class=\"tech-tag\">FileManager</span><span class=\"tech-tag\">CoreData</span>\n          <p style=\"margin-top:10px\">Adicionar campo <code>lastReminderSent: Date?</code> na entidade <code>AudioRecording</code>. Ao abrir o app (<code>onAppear</code> da root view), chamar <code>RetrospectiveNotificationService.schedule()</code>. Service: fetch recordings onde <code>date &lt; (now - 30 days) AND lastReminderSent == nil OR lastReminderSent &lt; (now - 7 days)</code>. Agendar com <code>UNCalendarNotificationTrigger</code> para 9h do dia seguinte. Deep link: <code>userInfo: [\"recordingID\": recording.objectID.uriRepresentation().absoluteString]</code>. Tratar em <code>UNUserNotificationCenterDelegate</code> no <code>AppDelegate</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-015a",
+    "title": "Mascote no widget — Sistema de assets por estado emocional",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Definir enum <code>MascotMood</code>: <code>practicing</code>, <code>celebrating</code>, <code>resting</code>, <code>struggling</code>.</li>\n            <li>Criar 4 assets de imagem no <code>Assets.xcassets</code> para cada estado (PNG ou SVG via SF Symbols).</li>\n            <li>Lógica de determinação do mood: streak atual, última prática, taxa de conclusão recente.</li>\n            <li>Compartilhar mood atual via <code>UserDefaults(suiteName: AppGroup)</code> para o widget.</li>\n            <li>Atualizar mood ao concluir meta, iniciar sessão ou encerrar sem praticar.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">UserDefaults (App Group)</span><span class=\"tech-tag\">Codable</span>\n          <p style=\"margin-top:10px\">Definir: <code>enum MascotMood: String, Codable { case practicing, celebrating, resting, struggling }</code>. Lógica em <code>MascotService.computeMood() -> MascotMood</code>: se <code>streak > 7</code> → <code>.celebrating</code>; se <code>lastPractice > 2 days ago</code> → <code>.resting</code>; se <code>completionRate < 0.3</code> → <code>.struggling</code>; senão → <code>.practicing</code>. Salvar: <code>UserDefaults(suiteName: \"group.com.app\")?.set(try? JSONEncoder().encode(mood), forKey: \"mascotMood\")</code>. Chamar <code>WidgetCenter.shared.reloadAllTimelines()</code> após atualizar mood.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-015b",
+    "title": "Mascote no widget — Integração WidgetKit com estados de timeline",
+    "difficulty": "dificil",
+    "description": "<ul>\n            <li>Ler o <code>MascotMood</code> do App Group no <code>TimelineProvider</code>.</li>\n            <li>Gerar múltiplas entradas de timeline com mood variando ao longo do dia (ex: manhã/tarde/noite).</li>\n            <li>Widget view: exibir imagem do mascote correspondente ao mood + legenda de encorajamento.</li>\n            <li>Suportar tamanho <code>systemSmall</code> com mascote centralizado.</li>\n            <li>Testar os 4 estados de mood na preview do Xcode.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">WidgetKit</span><span class=\"tech-tag\">TimelineEntry</span><span class=\"tech-tag\">@Environment widgetFamily</span>\n          <p style=\"margin-top:10px\">Struct de entrada: <code>struct MoodEntry: TimelineEntry { let date: Date; let mood: MascotMood; let streak: Int }</code>. No <code>getTimeline</code>: ler mood do App Group, criar entradas para cada 2h do dia com o mesmo mood. View: <code>Image(entry.mood.assetName).resizable().scaledToFit()</code> onde <code>assetName</code> retorna o nome do asset no <code>xcassets</code>. Legenda motivacional: switch no mood. Preview: <code>MoodEntry_Previews</code> com todos os 4 casos usando <code>PreviewContext</code>.</p>\n          <div class=\"note-box\">WidgetKit não suporta animações — os \"estados de animação\" são frames estáticos trocados por entradas de timeline diferentes.</div>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-016",
+    "title": "Distribuir automaticamente as metas diárias ao longo dos dias da semana",
+    "difficulty": "medio",
+    "description": "<ul>\n            <li>Algoritmo de distribuição: ordenar metas por prioridade e distribuir uniformemente nos dias com disponibilidade.</li>\n            <li>Respeitar o horário de prática configurado pelo usuário por dia.</li>\n            <li>Exibir prévia da distribuição antes de confirmar.</li>\n            <li>Atualizar <code>scheduledDate</code> das metas no CoreData.</li>\n            <li>Opção de redistribuir manualmente via drag-and-drop.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">Calendar</span><span class=\"tech-tag\">CoreData Batch Update</span><span class=\"tech-tag\">List onMove</span>\n          <p style=\"margin-top:10px\">Serviço <code>SchedulingService.distribute(goals: [Goal], availableDays: [Weekday]) -> [Date: [Goal]]</code>. Usar <code>Calendar.current.nextDate(after: Date(), matching: components, matchingPolicy: .nextTime)</code> para calcular próximo ocorrência de cada dia da semana. Salvar resultados: <code>NSBatchUpdateRequest</code> ou loop com <code>goal.scheduledDate = date</code> e <code>try context.save()</code>. Drag-and-drop na <code>List</code>: <code>.onMove { from, to in ... }</code> com binding ao array reordenado.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-017",
+    "title": "Gravar vídeo durante uma sessão de prática e vinculá-lo a uma meta",
+    "difficulty": "medio",
+    "description": "<ul>\n            <li>Botão de gravação de vídeo dentro da tela de sessão ativa.</li>\n            <li>Abrir câmera nativa e salvar vídeo localmente após gravação.</li>\n            <li>Gerar thumbnail do vídeo automaticamente.</li>\n            <li>Vincular arquivo salvo à meta atual criando entidade <code>VideoRecording</code>.</li>\n            <li>Exibir vídeos gravados na tela de detalhes da meta.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">UIImagePickerController</span><span class=\"tech-tag\">UIViewControllerRepresentable</span><span class=\"tech-tag\">AVAssetImageGenerator</span>\n          <p style=\"margin-top:10px\">Usar <code>UIImagePickerController</code> via <code>UIViewControllerRepresentable</code>: <code>picker.sourceType = .camera; picker.mediaTypes = [\"public.movie\"]; picker.videoQuality = .typeHigh</code>. No delegate <code>imagePickerController(_:didFinishPickingMediaWithInfo:)</code>: obter URL com <code>info[.mediaURL] as? URL</code>. Copiar para Documents com <code>FileManager.default.copyItem(at: sourceURL, to: destURL)</code>. Adicionar no <code>Info.plist</code>: <code>NSCameraUsageDescription</code> e <code>NSMicrophoneUsageDescription</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-018",
+    "title": "Exibir comparativo de tempo praticado em relação ao período anterior",
+    "difficulty": "medio",
+    "description": "<ul>\n            <li>Ao encerrar sessão, calcular tempo total do dia/semana atual.</li>\n            <li>Comparar com média do mesmo período anterior (ontem, semana passada).</li>\n            <li>Exibir delta percentual: \"Você praticou 20% mais que ontem\".</li>\n            <li>Mostrar gráfico de barras dos últimos 7 dias.</li>\n            <li>Exibir recorde pessoal de tempo praticado em um único dia.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData NSFetchRequest</span><span class=\"tech-tag\">Calendar</span><span class=\"tech-tag\">Path (gráfico)</span>\n          <p style=\"margin-top:10px\">Fetch sessions do período: <code>NSPredicate(format: \"date >= %@ AND date <= %@\", startOfDay as CVarArg, endOfDay as CVarArg)</code>. Somar <code>duration</code> no Swift: <code>sessions.reduce(0) { $0 + $1.duration }</code>. Calcular delta: <code>let delta = (current - previous) / previous * 100</code>. Gráfico de barras 7 dias: array de tuplas <code>[(dayLabel: String, totalMinutes: Double)]</code> renderizado com <code>GeometryReader</code> + <code>RoundedRectangle</code> proporcional à altura máxima. Usar <code>Calendar.current.startOfDay(for:)</code> para delimitar dias.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-019",
+    "title": "Filtrar sessões de prática por duração, dificuldade e humor",
+    "difficulty": "medio",
+    "description": "<ul>\n            <li>Painel de filtros com: range de duração (Slider), seletor de dificuldade, seletor de humor.</li>\n            <li>Aplicar filtros via predicate no <code>NSFetchRequest</code> de sessões.</li>\n            <li>Chips de filtro ativos exibidos acima da lista com opção de remover.</li>\n            <li>Contador de sessões encontradas com os filtros aplicados.</li>\n            <li>Botão de limpar todos os filtros.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">NSCompoundPredicate</span><span class=\"tech-tag\">Picker</span><span class=\"tech-tag\">Slider</span>\n          <p style=\"margin-top:10px\">Struct <code>SessionFilter</code> com <code>minDuration: Double</code>, <code>maxDuration: Double</code>, <code>difficulty: GoalDifficulty?</code>, <code>mood: Mood?</code>. Construir predicate: <code>NSCompoundPredicate(andPredicateWithSubpredicates: [durationPredicate, difficultyPredicate, moodPredicate].compactMap { $0 })</code>. Usar <code>@FetchRequest</code> com predicate dinâmico ou recriar o fetch manualmente num <code>ObservableObject</code>. Filtros no toolbar: <code>Menu(\"Filtrar\") { Picker(\"Humor\", ...) { ... } }</code> (iOS 15 suporta <code>Menu</code> com <code>Picker</code>).</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-020",
+    "title": "Vincular sessão de prática a uma música e visualizar histórico",
+    "difficulty": "medio",
+    "description": "<ul>\n            <li>Criar entidade CoreData <code>Song</code>: <code>title</code>, <code>artist</code>, <code>genre</code>.</li>\n            <li>Campo opcional \"Música\" no formulário de sessão com <code>Picker</code> + opção de criar nova.</li>\n            <li>Tela de detalhes da música: histórico de todas as sessões vinculadas.</li>\n            <li>Estatísticas por música: tempo total praticado, número de sessões, melhor humor registrado.</li>\n            <li>Lista de músicas ordenada por tempo de prática total (mais praticadas no topo).</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData Relationship</span><span class=\"tech-tag\">@FetchRequest</span><span class=\"tech-tag\">List Section</span>\n          <p style=\"margin-top:10px\">Relação CoreData: <code>PracticeSession.song</code> → <code>Song</code> (to-one, optional). <code>Song.sessions</code> → <code>NSSet</code> de <code>PracticeSession</code> (to-many, cascade delete: no). Agregar tempo por música no Swift: <code>song.sessions?.allObjects.compactMap { $0 as? PracticeSession }.reduce(0) { $0 + $1.duration }</code>. Na lista de músicas, usar <code>Section</code> por gênero. Historico da música: <code>@FetchRequest(predicate: NSPredicate(format: \"song == %@\", song), sortDescriptors: [NSSortDescriptor(key: \"date\", ascending: false)])</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-021",
+    "title": "Registrar sessões de prática realizadas",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Formulário de registro: data, duração, meta associada, notas livres.</li>\n            <li>Salvar sessão no CoreData ao confirmar.</li>\n            <li>Listar sessões em ordem cronológica reversa.</li>\n            <li>Swipe para deletar sessão.</li>\n            <li>Disparar atualização de streak e XP após salvar.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">Form</span><span class=\"tech-tag\">@Environment managedObjectContext</span>\n          <p style=\"margin-top:10px\">Entidade <code>PracticeSession</code>: <code>date: Date</code>, <code>duration: Double</code> (minutos), <code>notes: String?</code>, <code>goal: Goal?</code>, <code>mood: String?</code>. View: <code>Form { Section(\"Sessão\") { DatePicker(...); Stepper(\"Duração: \\(duration) min\", value: $duration, in: 5...300, step: 5) } }</code>. Salvar: <code>@Environment(\\.managedObjectContext) var context</code> + <code>let session = PracticeSession(context: context); try context.save()</code>. Delete: <code>.onDelete { context.delete(sessions[$0.first!]); try? context.save() }</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-022",
+    "title": "Cadastrar um objetivo musical",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Formulário: título, descrição, data alvo, categoria, dificuldade.</li>\n            <li>Validação: título não vazio, data alvo no futuro.</li>\n            <li>Salvar entidade <code>Goal</code> no CoreData.</li>\n            <li>Calcular e salvar XP de recompensa automático baseado na dificuldade.</li>\n            <li>Navegar de volta à lista após salvar com animação.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">NavigationView</span><span class=\"tech-tag\">Form + DatePicker</span>\n          <p style=\"margin-top:10px\">Entidade <code>Goal</code>: <code>title: String</code>, <code>goalDescription: String?</code>, <code>targetDate: Date</code>, <code>difficulty: String</code>, <code>xpReward: Int16</code>, <code>isCompleted: Bool</code>, <code>createdAt: Date</code>. <code>DatePicker(\"Data alvo\", selection: $targetDate, in: Date()..., displayedComponents: .date)</code>. XP automático: <code>var xpReward: Int { difficulty == \"hard\" ? 250 : difficulty == \"medium\" ? 150 : 75 }</code>. Voltar após salvar: <code>@Environment(\\.presentationMode) var mode; mode.wrappedValue.dismiss()</code> (iOS 15 — <code>dismiss()</code> direto está no iOS 15 via <code>@Environment(\\.dismiss)</code>).</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-023",
+    "title": "Notificar o usuário para realizar pausas conscientes durante a prática",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Configuração: intervalo de pausa (ex: a cada 25 minutos) nas preferências.</li>\n            <li>Agendar notificação repetida enquanto sessão está ativa.</li>\n            <li>Cancelar notificações ao encerrar a sessão.</li>\n            <li>Mensagens de pausa variadas (ex: \"Relaxe os dedos por 2 minutos\").</li>\n            <li>Quick action na notificação: \"Continuar\" sem abrir o app.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">UNTimeIntervalNotificationTrigger</span><span class=\"tech-tag\">UNNotificationAction</span>\n          <p style=\"margin-top:10px\">Ao iniciar sessão: <code>let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 25*60, repeats: true)</code>. Conteúdo: <code>content.title = \"Hora de pausar!\"; content.body = pauseMessages.randomElement()!; content.sound = .default</code>. Quick action: <code>let continueAction = UNNotificationAction(identifier: \"CONTINUE\", title: \"Continuar\", options: [])</code>. Registrar category: <code>UNUserNotificationCenter.current().setNotificationCategories([category])</code>. Ao encerrar sessão: <code>UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [\"practiceBreak\"])</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-024",
+    "title": "Selecionar horário para realização de cada meta",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li><code>DatePicker</code> de hora/minuto no formulário de criação/edição da meta.</li>\n            <li>Salvar horário escolhido no CoreData em campo <code>scheduledTime: Date?</code>.</li>\n            <li>Agendar notificação diária para o horário definido.</li>\n            <li>Atualizar notificação se o horário for alterado.</li>\n            <li>Opção de desativar lembrete por meta específica.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">DatePicker</span><span class=\"tech-tag\">UNCalendarNotificationTrigger</span>\n          <p style=\"margin-top:10px\"><code>DatePicker(\"Horário\", selection: $scheduledTime, displayedComponents: .hourAndMinute)</code>. Agendar: <code>var components = Calendar.current.dateComponents([.hour, .minute], from: scheduledTime); components.weekday = nil</code> (repete todo dia). <code>let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)</code>. ID da notificação: <code>\"goal-\\(goal.objectID.uriRepresentation().absoluteString)\"</code> para poder remover/atualizar individualmente. Remover notificação antiga antes de reagendar ao editar horário.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-025",
+    "title": "Criar metas personalizadas relacionadas à prática do instrumento",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Campos adicionais opcionais: BPM alvo, acorde/técnica específica, número de repetições.</li>\n            <li>Selector de tipo de meta: Técnica, Repertório, Teoria, Criatividade.</li>\n            <li>Mostrar/ocultar campos dinamicamente conforme tipo selecionado.</li>\n            <li>Preview do card da meta antes de salvar.</li>\n            <li>Reutilizar formulário base de MC-022 com seções extras.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">Form Section</span><span class=\"tech-tag\">Picker segmented</span>\n          <p style=\"margin-top:10px\">Adicionar campos no <code>Goal</code> entity: <code>targetBPM: Int16</code>, <code>targetChord: String?</code>, <code>targetTechnique: String?</code>, <code>repetitions: Int16</code>, <code>goalType: String</code>. No formulário: <code>Picker(\"Tipo\", selection: $goalType) { ... }.pickerStyle(.segmented)</code>. Condicional: <code>if goalType == \"Técnica\" { Section(\"Detalhes Técnicos\") { TextField(\"Acorde alvo\", ...) } }</code>. Usar <code>@State var goalType: GoalType = .technique</code> com enum para type safety.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-026",
+    "title": "Criar objetivos dentro de categorias ou estilos musicais",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Criar entidade <code>Category</code> no CoreData: <code>name</code>, <code>colorHex</code>, <code>icon</code> (SF Symbol).</li>\n            <li>Seed com categorias predefinidas: Blues, Jazz, Rock, Clássico, Técnica Pura, Teoria.</li>\n            <li>Seletor visual de categoria no formulário de objetivo (grid de ícones coloridos).</li>\n            <li>Filtrar lista de objetivos por categoria.</li>\n            <li>Opção de criar categoria personalizada.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">LazyVGrid</span><span class=\"tech-tag\">Color(hex:)</span>\n          <p style=\"margin-top:10px\">Seed no <code>PersistenceController.init</code>: verificar <code>UserDefaults</code> \"categoriesSeeded\". Seletor visual: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) { ForEach(categories) { cat in VStack { Image(systemName: cat.icon).foregroundColor(Color(hex: cat.colorHex)) Text(cat.name) }.onTapGesture { selectedCategory = cat } } }</code>. Destaque de selecionado: borda com <code>.overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.accentColor, lineWidth: 2))</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-027",
+    "title": "Visualizar trilha de metas diárias",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Tela principal: lista horizontal de metas do dia agendadas para hoje.</li>\n            <li>Cada card mostra: título, horário, status de conclusão, dificuldade.</li>\n            <li>Linha de progresso visual conectando os cards (como uma trilha).</li>\n            <li>Contador de metas concluídas vs total do dia.</li>\n            <li>Tap no card abre detalhe ou inicia sessão de prática.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">@FetchRequest + NSPredicate</span><span class=\"tech-tag\">ScrollView HStack</span><span class=\"tech-tag\">ZStack</span>\n          <p style=\"margin-top:10px\">Predicate para hoje: <code>NSPredicate(format: \"scheduledDate >= %@ AND scheduledDate < %@\", startOfDay as CVarArg, endOfDay as CVarArg)</code>. Layout horizontal: <code>ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 0) { ForEach(goals) { goal in GoalCard(goal: goal).frame(width: 160) } } }</code>. Linha de trilha: <code>ZStack(alignment: .leading) { Rectangle().fill(Color.gray.opacity(0.2)).frame(height: 3); Rectangle().fill(Color.accentColor).frame(width: completionWidth, height: 3) }</code> usando <code>GeometryReader</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-028",
+    "title": "Visualizar todos os objetivos cadastrados",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Lista de todos os objetivos com filtro por: ativos, concluídos, expirados.</li>\n            <li>Cada item: título, categoria (com cor), data alvo, barra de progresso de metas vinculadas.</li>\n            <li>Ordenação: por data alvo, por criação, por categoria.</li>\n            <li>Swipe actions: marcar como concluído, deletar, editar.</li>\n            <li>Busca por título.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">@FetchRequest</span><span class=\"tech-tag\">.searchable()</span><span class=\"tech-tag\">.swipeActions()</span>\n          <p style=\"margin-top:10px\">Usar <code>.searchable(text: $searchText)</code> (iOS 15) no <code>NavigationView</code>. Filtrar resultados: <code>goals.filter { searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText) }</code>. Swipe actions: <code>.swipeActions(edge: .trailing) { Button(role: .destructive) { delete(goal) } label: { Label(\"Deletar\", systemImage: \"trash\") } }</code>. Barra de progresso de metas: <code>ProgressView(value: completedGoals, total: totalGoals).tint(categoryColor)</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-029",
+    "title": "Incrementar indicador de sequência (streak) ao concluir uma meta",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Verificar se o usuário já praticou hoje ao concluir meta.</li>\n            <li>Se última prática foi ontem: incrementar streak. Se gap &gt; 1 dia: resetar para 1.</li>\n            <li>Salvar <code>currentStreak</code> e <code>longestStreak</code> no CoreData em <code>UserProfile</code>.</li>\n            <li>Exibir animação de \"flame\" ao aumentar streak.</li>\n            <li>Streak visível no header/dashboard principal.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">Calendar</span><span class=\"tech-tag\">@AppStorage</span><span class=\"tech-tag\">withAnimation</span>\n          <p style=\"margin-top:10px\">Lógica em <code>StreakService.update()</code>: <code>let lastDate = UserDefaults.standard.object(forKey: \"lastPracticeDate\") as? Date</code>. <code>if Calendar.current.isDateInYesterday(lastDate ?? .distantPast) { streak += 1 } else if !Calendar.current.isDateInToday(lastDate ?? .distantPast) { streak = 1 }</code>. Salvar: <code>UserDefaults.standard.set(Date(), forKey: \"lastPracticeDate\")</code>. Animação: <code>withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { showStreakBump = true }</code> com imagem SF Symbol \"flame.fill\" que escala temporariamente.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-030",
+    "title": "Receber recompensas ao concluir metas (XP e aumento de nível)",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Ao concluir meta: awarding XP com animação de \"+XP\" flutuante.</li>\n            <li>Verificar se o XP atingiu o threshold do próximo nível.</li>\n            <li>Se nivel up: exibir overlay full-screen de celebração com novo nível.</li>\n            <li>Barra de XP no perfil mostrando progresso para o próximo nível.</li>\n            <li>Histórico de XP ganho (log de recompensas).</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">withAnimation</span><span class=\"tech-tag\">TimelineView (iOS 15)</span><span class=\"tech-tag\">ZStack overlay</span>\n          <p style=\"margin-top:10px\">Array de thresholds: <code>let levels = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000]</code>. Ao ganhar XP: <code>XPService.shared.award(xp: goal.xpReward)</code>. Se <code>newXP >= levels[currentLevel + 1]</code>: <code>withAnimation(.spring()) { showLevelUp = true }</code>. Overlay de level up: <code>.overlay { if showLevelUp { LevelUpView(newLevel: level).transition(.scale.combined(with: .opacity)) } }</code>. Animação XP flutuante: <code>@State var xpOffset: CGFloat = 0</code> animado de 0 a -60 com <code>withAnimation(.easeOut(duration: 1))</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-031",
+    "title": "Acumular XP e pontuação proporcional às atividades realizadas",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Criar <code>XPService.swift</code> centralizado para todas as operações de XP.</li>\n            <li>Fontes de XP: conclusão de meta, sessão de prática, badge conquistada, streak milestone.</li>\n            <li>Persistir XP total e nível em <code>UserProfile</code> no CoreData.</li>\n            <li>Log de XP com data, quantidade e motivo para histórico.</li>\n            <li>Propagar mudanças via <code>NotificationCenter</code> para views atualizarem.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">NotificationCenter</span><span class=\"tech-tag\">Singleton Service</span>\n          <p style=\"margin-top:10px\">Criar <code>class XPService { static let shared = XPService(); func award(xp: Int, reason: String, context: NSManagedObjectContext) { ... } }</code>. Dentro do método: buscar ou criar <code>UserProfile</code> singleton no CoreData, incrementar <code>totalXP</code>, criar <code>XPLogEntry</code>, verificar level up, salvar contexto. Emitir: <code>NotificationCenter.default.post(name: .xpAwarded, object: nil, userInfo: [\"xp\": xp, \"newTotal\": profile.totalXP])</code>. Views: <code>.onReceive(NotificationCenter.default.publisher(for: .xpAwarded)) { _ in updateXPDisplay() }</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-032",
+    "title": "Atribuir XP proporcional à dificuldade da atividade concluída",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Definir enum <code>GoalDifficulty</code> com multiplicador de XP.</li>\n            <li>XP base por tipo de atividade; multiplicar pelo fator de dificuldade.</li>\n            <li>Exibir o XP que será ganho antes do usuário concluir a meta.</li>\n            <li>Bônus por conclusão antes da data alvo.</li>\n            <li>Penalidade zero — não subtrair XP por não cumprimento.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">enum + computed property</span><span class=\"tech-tag\">XPService</span>\n          <p style=\"margin-top:10px\">Definir: <code>enum GoalDifficulty: String, CaseIterable { case easy = \"Fácil\", medium = \"Médio\", hard = \"Difícil\"; var xpMultiplier: Double { switch self { case .easy: return 1.0; case .medium: return 1.5; case .hard: return 2.5 } } }</code>. Cálculo: <code>let baseXP = 50; let finalXP = Int(Double(baseXP) * difficulty.xpMultiplier)</code>. Bônus de antecipação: <code>if goal.targetDate > Date() { finalXP = Int(Double(finalXP) * 1.2) }</code>. Salvar <code>goal.xpReward = Int16(finalXP)</code> na criação.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-033",
+    "title": "Conquistar badges ao atingir marcos específicos (incluindo secretas)",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Definir catálogo de badges: condição, ícone, título, descrição, se é secreta.</li>\n            <li><code>BadgeService</code> avalia condições após cada ação significativa.</li>\n            <li>Badges secretas aparecem como \"?\" na galeria até serem desbloqueadas.</li>\n            <li>Notificação local ao desbloquear nova badge.</li>\n            <li>Tela de galeria com todas as badges, status e data de desbloqueio.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData Badge entity</span><span class=\"tech-tag\">LazyVGrid</span><span class=\"tech-tag\">UNUserNotificationCenter</span>\n          <p style=\"margin-top:10px\">Struct <code>BadgeDefinition</code>: <code>id: String, title: String, iconName: String, isSecret: Bool, condition: (UserStats) -> Bool</code>. Entidade CoreData <code>Badge</code>: <code>badgeID: String</code>, <code>unlockedDate: Date?</code>, <code>isUnlocked: Bool</code>. <code>BadgeService.evaluate(stats: UserStats)</code>: iterar definições, verificar se condição satisfeita e badge não desbloqueada, salvar e notificar. Galeria: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 90))]) { ForEach(badges) { badge in BadgeCell(badge: badge, isSecret: badge.isSecret && !badge.isUnlocked) } }</code>. Secreta: exibir <code>Image(systemName: \"questionmark.circle.fill\")</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-034",
+    "title": "Responder questionário inicial sobre nível de experiência musical",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Onboarding flow multi-página: Boas-vindas → Nível → Instrumento → Acordes → Técnicas → Pronto.</li>\n            <li>Seleção de nível: Iniciante, Intermediário, Avançado com descrições.</li>\n            <li>Salvar nível em <code>UserProfile</code> CoreData e em <code>@AppStorage</code> para acesso global.</li>\n            <li>Marcar onboarding como concluído para não exibir novamente.</li>\n            <li>Opção de refazer o questionário nas configurações.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">TabView .page style</span><span class=\"tech-tag\">@AppStorage</span><span class=\"tech-tag\">fullScreenCover</span>\n          <p style=\"margin-top:10px\"><code>@AppStorage(\"onboardingComplete\") var onboardingComplete = false</code>. No <code>ContentView</code>: <code>.fullScreenCover(isPresented: .constant(!onboardingComplete)) { OnboardingView() }</code>. <code>OnboardingView</code>: <code>TabView(selection: $currentPage) { WelcomePage().tag(0); LevelPage().tag(1); ... }.tabViewStyle(.page(indexDisplayMode: .always))</code>. Ao finalizar: <code>onboardingComplete = true</code> e seed inicial de dados do <code>UserProfile</code> no CoreData (nível, instrumento).</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-035",
+    "title": "Selecionar acordes que já domina durante o onboarding",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Lista de acordes predefinidos: Am, Em, G, C, D, F, Bm, A7, E7, Dm, G7, etc.</li>\n            <li>Interface de múltipla seleção com chips coloridos por dificuldade do acorde.</li>\n            <li>Salvar acordes selecionados como relação <code>UserProfile.masteredChords</code>.</li>\n            <li>Exibir contador \"X acordes selecionados\".</li>\n            <li>Editável nas configurações após o onboarding.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData</span><span class=\"tech-tag\">LazyVGrid</span><span class=\"tech-tag\">Set selection</span>\n          <p style=\"margin-top:10px\">Entidade <code>Chord</code>: <code>name: String</code>, <code>difficulty: String</code>. Seed no <code>PersistenceController</code>. <code>@State var selectedChords: Set&lt;NSManagedObjectID&gt; = []</code>. Grid de chips: <code>LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))]) { ForEach(chords) { chord in ChordChip(name: chord.name, isSelected: selectedChords.contains(chord.objectID)).onTapGesture { toggleSelection(chord) } } }</code>. Ao concluir onboarding: setar relação no <code>UserProfile.masteredChords</code> (NSSet) e salvar contexto.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-036",
+    "title": "Selecionar técnicas que já pratica durante o onboarding",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Lista de técnicas: Pestana, Fingerpicking, Palm Mute, Hammer-on, Pull-off, Bend, Vibrato, Sweep Picking.</li>\n            <li>Cada técnica com ícone e breve descrição (ex: \"Pestana — dedo indicador cobrindo todas as cordas\").</li>\n            <li>Seleção múltipla com toggle visual.</li>\n            <li>Salvar em relação <code>UserProfile.practicedTechniques</code>.</li>\n            <li>Usar o mesmo padrão de componente de MC-035.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">CoreData Technique entity</span><span class=\"tech-tag\">List multi-select</span>\n          <p style=\"margin-top:10px\">Mesma arquitetura de MC-035 com entidade <code>Technique</code>: <code>name: String</code>, <code>techniqueDescription: String</code>, <code>difficulty: String</code>. Seed: 8 técnicas listadas. Alternativamente, usar <code>List(techniques, selection: $selectedTechniques)</code> com <code>EditButton()</code> para seleção nativa do iOS. Relação no UserProfile: <code>practicedTechniques: NSSet</code> (to-many). Exibir técnicas selecionadas na tela de perfil após onboarding.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-037",
+    "title": "Gravar áudio durante uma sessão de prática e vinculá-lo a uma meta",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Botão de gravação na tela de sessão ativa (mic icon).</li>\n            <li>Indicador visual de gravação em andamento (onda animada ou timer).</li>\n            <li>Parar gravação e salvar arquivo <code>.m4a</code> no Documents.</li>\n            <li>Prompt pós-gravação: vincular a qual meta?</li>\n            <li>Listar gravações do dia na tela de sessão.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">AVAudioRecorder</span><span class=\"tech-tag\">@StateObject</span><span class=\"tech-tag\">AVAudioSession</span>\n          <p style=\"margin-top:10px\">Classe <code>AudioRecorderService: ObservableObject</code> com <code>@Published var isRecording: Bool</code>, <code>@Published var recordingURL: URL?</code>. Configurar sessão e criar <code>AVAudioRecorder</code> no método <code>startRecording()</code>. Indicador animado: <code>Circle().scaleEffect(isRecording ? 1.3 : 1.0).animation(.easeInOut(duration: 0.5).repeatForever(), value: isRecording)</code>. Após <code>stopRecording()</code>: exibir <code>.sheet(isPresented: $showLinkSheet) { GoalPickerView(onSelect: linkRecording) }</code>. Adicionar <code>NSMicrophoneUsageDescription</code> no <code>Info.plist</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-038",
+    "title": "Visualizar histórico de gravações organizadas por objetivo",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Lista de gravações agrupadas por objetivo (seções expansíveis).</li>\n            <li>Cada item: data, duração, botão de play inline.</li>\n            <li>Filtro por tipo: áudio e/ou vídeo.</li>\n            <li>Swipe para deletar (com confirmação e remoção do arquivo em disco).</li>\n            <li>Contador total de gravações e tempo acumulado.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">@SectionedFetchRequest</span><span class=\"tech-tag\">AVAudioPlayer</span><span class=\"tech-tag\">FileManager</span>\n          <p style=\"margin-top:10px\">Usar <code>@SectionedFetchRequest(sectionIdentifier: \\.goal?.title, ...)</code> (disponível iOS 15) para agrupar gravações por objetivo. Reprodução inline: <code>@StateObject var player: AudioPlayerService</code> com <code>AVAudioPlayer</code>. Botão play: <code>Button { player.toggle(url: recording.fileURL) } label: { Image(systemName: player.isPlaying ? \"pause.circle\" : \"play.circle\") }</code>. Ao deletar: <code>try FileManager.default.removeItem(at: recording.fileURL); context.delete(recording); try context.save()</code>.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-039",
+    "title": "Usar cronômetro durante uma sessão para registrar tempo efetivo",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Cronômetro visível na tela de sessão ativa no formato HH:MM:SS.</li>\n            <li>Controles: Iniciar, Pausar, Retomar, Encerrar sessão.</li>\n            <li>Ao encerrar: salvar tempo total como <code>duration</code> da sessão.</li>\n            <li>Continuar rodando em background com notificação da sessão ativa.</li>\n            <li>Aviso se sessão ultrapassar 3 horas sem pausa.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">Timer.publish (Combine)</span><span class=\"tech-tag\">@State</span><span class=\"tech-tag\">Background Task</span>\n          <p style=\"margin-top:10px\"><code>let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()</code>. <code>@State var elapsedSeconds: Int = 0; @State var isRunning = false</code>. <code>.onReceive(timer) { _ in if isRunning { elapsedSeconds += 1 } }</code>. Formatação: <code>var timeString: String { let h = elapsedSeconds/3600; let m = (elapsedSeconds%3600)/60; let s = elapsedSeconds%60; return String(format: \"%02d:%02d:%02d\", h, m, s) }</code>. Background: salvar <code>startDate</code> no <code>scenePhase.background</code> e recalcular ao retornar. Cancelar timer com <code>.cancel()</code> ao encerrar.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-040",
+    "title": "Registrar como o usuário se sentiu ao concluir uma sessão de prática",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Sheet pós-sessão com seletor de humor visual (emojis grandes, tap para selecionar).</li>\n            <li>Humores: Motivado, Neutro, Frustrado, Cansado, Empolgado.</li>\n            <li>Salvar humor na entidade <code>PracticeSession.mood</code>.</li>\n            <li>Campo opcional de nota sobre a sessão.</li>\n            <li>Visualizar tendência de humor ao longo do tempo nas estatísticas.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">enum Mood</span><span class=\"tech-tag\">.sheet(isPresented:)</span><span class=\"tech-tag\">HStack emoji selector</span>\n          <p style=\"margin-top:10px\">Enum: <code>enum Mood: String, CaseIterable, Identifiable { case motivated = \"😊\", neutral = \"😐\", frustrated = \"😤\", tired = \"😴\", excited = \"🤩\"; var label: String { switch self { case .motivated: return \"Motivado\"; ... } } }</code>. View: <code>HStack(spacing: 16) { ForEach(Mood.allCases) { mood in Text(mood.rawValue).font(.largeTitle).scaleEffect(selectedMood == mood ? 1.4 : 1.0).onTapGesture { withAnimation { selectedMood = mood } } } }</code>. Salvar <code>session.mood = selectedMood?.label</code> no CoreData.</p>",
+    "done": false,
+    "is_custom": false
+  },
+  {
+    "id": "MC-041",
+    "title": "Visualizar área de conquistas acumuladas (músicas, acordes, sequências)",
+    "difficulty": "facil",
+    "description": "<ul>\n            <li>Tela de conquistas com seções: Estatísticas Gerais, Badges, Músicas Dominadas, Acordes Aprendidos.</li>\n            <li>Estatísticas: XP total, nível, maior streak, horas praticadas, metas concluídas.</li>\n            <li>Galeria de badges desbloqueadas com data.</li>\n            <li>Lista de músicas marcadas como dominadas com data de conclusão.</li>\n            <li>Gráfico de acordes aprendidos ao longo do tempo.</li>\n          </ul>",
+    "impl_guide": "<p class=\"impl-header\">Frameworks &amp; APIs</p>\n          <span class=\"tech-tag\">ScrollView</span><span class=\"tech-tag\">LazyVGrid</span><span class=\"tech-tag\">CoreData aggregates</span>\n          <p style=\"margin-top:10px\">Estrutura da view: <code>ScrollView { VStack(spacing: 24) { StatsHeaderView(); BadgeGalleryView(); MasteredSongsView(); ChordProgressView() } }</code>. Stats: buscar <code>UserProfile</code> singleton do CoreData. Total de horas: agregar <code>PracticeSession.duration</code> somando no Swift. Badges: <code>@FetchRequest(predicate: NSPredicate(format: \"isUnlocked == true\"), sortDescriptors: [NSSortDescriptor(key: \"unlockedDate\", ascending: false)])</code>. Acordes ao longo do tempo: array de <code>SkillSnapshot.chordsCount</code> por data renderizado com <code>Path</code> em <code>GeometryReader</code>.</p>",
+    "done": false,
+    "is_custom": false
+  }
+]
