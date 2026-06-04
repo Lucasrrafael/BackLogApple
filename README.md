@@ -4,8 +4,6 @@ Organizador de cards em formato kanban/backlog para o projeto **Guitarllito**, a
 
 O time usa esta página para acompanhar as features do app: o que é fácil, médio ou difícil, o que já foi concluído e o que ainda falta implementar em SwiftUI (iOS 15 / Xcode 13.2.1).
 
-**Demo:** [back-log-apple.vercel.app](https://back-log-apple.vercel.app)
-
 ---
 
 ## O que faz
