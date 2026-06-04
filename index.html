@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guitarllito — iOS Backlog</title>
+  <link rel="stylesheet" href="/css/backlog.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════════════ -->
+<header>
+  <div class="header-left">
+    <h1>Guitarllito — iOS Backlog</h1>
+    <div class="subtitle">Xcode 13.2.1 · iOS 15 Target · SwiftUI</div>
+  </div>
+  <div class="header-right">
+    <div class="progress-label" id="progressLabel">Carregando...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════ TOOLBAR ══════════════════════════════════ -->
+<div class="toolbar">
+  <span class="toolbar-label">Filtrar:</span>
+  <button class="filter-btn active" data-filter="all">Todos</button>
+  <button class="filter-btn facil"   data-filter="facil">Fácil</button>
+  <button class="filter-btn medio"   data-filter="medio">Médio</button>
+  <button class="filter-btn dificil" data-filter="dificil">Difícil</button>
+  <button class="hide-done-btn" id="hideDoneBtn">Ocultar Concluídas</button>
+  <button class="add-card-btn" id="addCardBtn">+ Novo card</button>
+</div>
+
+<!-- ═══════════════════════════ MAIN ═════════════════════════════════════ -->
+<main>
+
+  <!-- Loading indicator (shown while fetching) -->
+  <div id="loadingState" class="loading-state">
+    <div class="spinner"></div>
+    <p>Carregando backlog...</p>
+  </div>
+
+  <!-- Main content (hidden while loading) -->
+  <div class="content" style="display:none">
+
+    <!-- ─────────────── DIFÍCIL ─────────────── -->
+    <div class="section-title" data-section="dificil">
+      <h2>Difícil</h2>
+      <span class="section-badge dificil">Difícil</span>
+      <span class="section-count" id="count-dificil"></span>
+    </div>
+    <div class="card-grid" id="grid-dificil"></div>
+
+    <!-- ─────────────── MÉDIO ─────────────── -->
+    <hr class="section-divider" />
+    <div class="section-title" data-section="medio">
+      <h2>Médio</h2>
+      <span class="section-badge medio">Médio</span>
+      <span class="section-count" id="count-medio"></span>
+    </div>
+    <div class="card-grid" id="grid-medio"></div>
+
+    <!-- ─────────────── FÁCIL ─────────────── -->
+    <hr class="section-divider" />
+    <div class="section-title" data-section="facil">
+      <h2>Fácil</h2>
+      <span class="section-badge facil">Fácil</span>
+      <span class="section-count" id="count-facil"></span>
+    </div>
+    <div class="card-grid" id="grid-facil"></div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="emoji">🔍</div>
+      <p>Nenhum card encontrado com os filtros atuais.</p>
+    </div>
+
+  </div><!-- /.content -->
+</main>
+
+<!-- ═══════════════════════════ MODAL — CRIAR CARD ═══════════════════════ -->
+<div id="createModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2>Novo Card</h2>
+
+    <label>
+      Título *
+      <input id="newTitle" type="text" placeholder="Ex: Implementar tela de login" maxlength="120" />
+    </label>
+
+    <label>
+      Dificuldade
+      <select id="newDifficulty">
+        <option value="facil">Fácil</option>
+        <option value="medio">Médio</option>
+        <option value="dificil">Difícil</option>
+      </select>
+    </label>
+
+    <label>
+      Descrição / Sub-tarefas (opcional)
+      <textarea id="newDescription" placeholder="Descreva as sub-tarefas ou contexto..."></textarea>
+    </label>
+
+    <label>
+      Notas de implementação (opcional)
+      <textarea id="newImplGuide" placeholder="Frameworks, APIs, dicas de código..."></textarea>
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelCreate">Cancelar</button>
+      <button class="btn-confirm" id="confirmCreate">Criar card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MODAL — SENHA ════════════════════════════ -->
+<div id="secretModal" class="modal-overlay secret-modal" hidden>
+  <div class="modal">
+    <h2>Senha do time</h2>
+    <p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">
+      Insira a senha compartilhada para realizar alterações no backlog.
+      A senha fica salva até fechar a aba.
+    </p>
+
+    <label>
+      Senha
+      <input id="secretInput" type="password" placeholder="••••••••••••" autocomplete="current-password" />
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelSecret">Cancelar</button>
+      <button class="btn-confirm" id="confirmSecret">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TOAST ════════════════════════════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- ═══════════════════════════ SCRIPTS ══════════════════════════════════ -->
+<script type="module" src="/js/backlog.js"></script>
+
+</body>
+</html>

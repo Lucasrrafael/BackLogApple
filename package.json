@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "node-html-parser": "^6.1.13"
+  },
+  "scripts": {
+    "seed": "node scripts/seed-from-html.js"
+  }
+}
